@@ -89,31 +89,36 @@
         }
 
         async function enviar() {
-            const resp = document.getElementById('responsable').value;
-            const fecha = document.getElementById('fechaMain').value;
-            
-            if (!resp) { alert("Por favor, indique el responsable"); return; }
-
-            const filas = document.querySelectorAll('#tablaBody tr:not(.section-title)');
-            const registros = [];
-
-            filas.forEach(fila => {
-    // Verificamos primero si la fila tiene el input de temperatura
-    const inputTemp = fila.querySelector('input[name="temp"]');
+    const resp = document.getElementById('responsable').value;
+    const fecha = document.getElementById('fechaMain').value;
     
-    if (inputTemp) { // Solo procesamos si el input existe
-        const nombre = fila.cells[0].innerText;
-        const temp = inputTemp.value;
-        const hum = fila.querySelector('input[name="hum"]')?.value || 0;
-        const obs = fila.querySelector('input[name="obs"]')?.value || "";
+    if (!resp) { alert("Por favor, indique el responsable"); return; }
 
-        if (temp !== "") {
-            registros.push({ nombre, temp, hum, obs });
+    const filas = document.querySelectorAll('#tablaBody tr');
+    const registros = [];
+
+    filas.forEach(fila => {
+        // Buscamos el input de temperatura en esta fila específica
+        const inputTemp = fila.querySelector('input[name="temp"]');
+        
+        // Solo entramos si la fila tiene un input (saltamos los títulos grises)
+        if (inputTemp) { 
+            const nombre = fila.cells[0].innerText.trim();
+            const temp = inputTemp.value;
+            const hum = fila.querySelector('input[name="hum"]')?.value || 0;
+            const obs = fila.querySelector('input[name="obs"]')?.value || "";
+
+            // Solo agregamos si el usuario escribió una temperatura
+            if (temp !== "") {
+                registros.push({ nombre, temp, hum, obs });
+            }
         }
-    }
-});
+    });
 
-            if (registros.length === 0) { alert("No hay datos de temperatura para enviar"); return; }
+    if (registros.length === 0) { 
+        alert("No hay datos de temperatura para enviar"); 
+        return; 
+    }
 
             const datosParaEnviar = { responsable: resp, fechaMain: fecha, registros: registros };
             const URL_DE_GOOGLE = "https://script.google.com/macros/s/AKfycbz5vZIRBglYSV6UoMgcKoEAe0Mwh262t_0j7e1Lfou_zHSLp4O4zNHAQsujE9apCDMc5w/exec";
