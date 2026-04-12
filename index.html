@@ -98,15 +98,20 @@
             const registros = [];
 
             filas.forEach(fila => {
-                const nombre = fila.cells[0].innerText;
-                const temp = fila.querySelector('input[name="temp"]').value;
-                const hum = fila.querySelector('input[name="hum"]').value;
-                const obs = fila.querySelector('input[name="obs"]').value;
+    // Verificamos primero si la fila tiene el input de temperatura
+    const inputTemp = fila.querySelector('input[name="temp"]');
+    
+    if (inputTemp) { // Solo procesamos si el input existe
+        const nombre = fila.cells[0].innerText;
+        const temp = inputTemp.value;
+        const hum = fila.querySelector('input[name="hum"]')?.value || 0;
+        const obs = fila.querySelector('input[name="obs"]')?.value || "";
 
-                if (temp !== "") {
-                    registros.push({ nombre, temp, hum, obs });
-                }
-            });
+        if (temp !== "") {
+            registros.push({ nombre, temp, hum, obs });
+        }
+    }
+});
 
             if (registros.length === 0) { alert("No hay datos de temperatura para enviar"); return; }
 
