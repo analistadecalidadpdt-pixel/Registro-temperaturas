@@ -57,22 +57,47 @@
         </form>
     </div>
 
-    <script>
-        // Configuración de equipos por sección
+   <script>
+        // Configuración actualizada: Límite 30°C y Fermentadora movida
         const secciones = [
-            { titulo: "Áreas (Límite: 25°C)", limite: 25, items: ["Almacén MP I", "Área de sótano", "Almacén de calidad", "Almacén de MP II", "Área de Premezcla", "Almacén de PT", "Área de lavado PDT", "Área de empaquetado", "Cuarto de enfriado", "Área de charcuteria", "Área de porcionado", "Prod. fresco PDT", "Área de wash PDT", "Producción PDT", "Recepción de MP", "Área de Batata I", "Área de Batata II", "Área de hojaldre"], hasHum: true },
-            { titulo: "Conservación (Máx 5°C)", limite: 5, items: ["Cava Conservadora 1", "Cava Conservadora 2", "Cava Conservadora 4", "Fermentadora de producción", "Nevera #14 True"], hasHum: false },
-            { titulo: "Congelación (Máx -10°C)", limite: -10, items: ["Cava Congelación 1", "Cava Congeladora 4", "Cava congeladora 3", "Ultra congelador (hojaldre)", "Congelador #6 (hojaldre)", "Congelador (hojaldre)"], hasHum: false }
+            { 
+                titulo: "Áreas (Límite: 30°C)", 
+                limite: 30, 
+                items: [
+                    "Almacén MP I", "Área de sótano", "Almacén de calidad", "Almacén de MP II", 
+                    "Área de Premezcla", "Almacén de PT", "Área de lavado PDT", "Área de empaquetado", 
+                    "Cuarto de enfriado", "Área de charcuteria", "Área de porcionado", "Prod. fresco PDT", 
+                    "Área de wash PDT", 
+                    "Fermentadora de producción", // Ahora aquí para tener Humedad
+                    "Producción PDT", "Recepción de MP", "Área de Batata I", "Área de Batata II", "Área de hojaldre"
+                ], 
+                hasHum: true 
+            },
+            { 
+                titulo: "Conservación (Máx 5°C)", 
+                limite: 5, 
+                items: ["Cava Conservadora 1", "Cava Conservadora 2", "Cava Conservadora 4", "Nevera #14 True"], 
+                hasHum: false 
+            },
+            { 
+                titulo: "Congelación (Máx -10°C)", 
+                limite: -10, 
+                items: ["Cava Congelación 1", "Cava Congeladora 4", "Cava congeladora 3", "Ultra congelador (hojaldre)", "Congelador #6 (hojaldre)", "Congelador (hojaldre)"], 
+                hasHum: false 
+            }
         ];
 
         const tbody = document.getElementById('tablaBody');
         document.getElementById('fechaMain').valueAsDate = new Date();
 
-        // Generación dinámica de la tabla
+        // Generación de tabla con soporte decimal (step 0.1)
         secciones.forEach(sec => {
             tbody.innerHTML += `<tr><td colspan="4" class="section-title">${sec.titulo}</td></tr>`;
             sec.items.forEach(nombre => {
-                const humField = sec.hasHum ? `<input type="number" name="hum">` : `<input type="number" value="0" readonly style="background:#eee">`;
+                const humField = sec.hasHum ? 
+                    `<input type="number" name="hum" step="0.1">` : 
+                    `<input type="number" value="0" readonly style="background:#eee">`;
+                
                 tbody.innerHTML += `
                     <tr>
                         <td>${nombre}</td>
@@ -84,63 +109,64 @@
         });
 
         function validarTemp(input, limite) {
-            if (parseFloat(input.value) > limite) { input.classList.add('alerta-critica'); } 
-            else { input.classList.remove('alerta-critica'); }
+            if (parseFloat(input.value) > limite) { 
+                input.classList.add('alerta-critica'); 
+            } else { 
+                input.classList.remove('alerta-critica'); 
+            }
         }
 
         async function enviar() {
-            document.querySelector('.btn-save').innerText = "Enviando...";
-    const resp = document.getElementById('responsable').value;
-    const fecha = document.getElementById('fechaMain').value;
-    
-    if (!resp) { alert("Por favor, indique el responsable"); return; }
-
-    const filas = document.querySelectorAll('#tablaBody tr');
-    const registros = [];
-
-    filas.forEach(fila => {
-        // Buscamos el input de temperatura en esta fila específica
-        const inputTemp = fila.querySelector('input[name="temp"]');
-        
-        // Solo entramos si la fila tiene un input (saltamos los títulos grises)
-        if (inputTemp) { 
-            const nombre = fila.cells[0].innerText.trim();
-            const temp = inputTemp.value;
-            const hum = fila.querySelector('input[name="hum"]')?.value || 0;
-            const obs = fila.querySelector('input[name="obs"]')?.value || "";
-
-            // Solo agregamos si el usuario escribió una temperatura
-            if (temp !== "") {
-                registros.push({ nombre, temp, hum, obs });
+            const btn = document.querySelector('.btn-save');
+            const resp = document.getElementById('responsable').value;
+            const fechaVal = document.getElementById('fechaMain').value;
+            
+            if (!resp) { 
+                alert("Por favor, indique el responsable"); 
+                return; 
             }
-        }
-    });
 
-    if (registros.length === 0) { 
-        alert("No hay datos de temperatura para enviar"); 
-        return; 
-    }
+            btn.innerText = "Enviando...";
 
-            const datosParaEnviar = { responsable: resp, fechaMain: fecha, registros: registros };
+            const filas = document.querySelectorAll('#tablaBody tr');
+            const registros = [];
+
+            filas.forEach(fila => {
+                const inputTemp = fila.querySelector('input[name="temp"]');
+                if (inputTemp) { 
+                    const nombre = fila.cells[0].innerText.trim();
+                    const temp = inputTemp.value;
+                    const hum = fila.querySelector('input[name="hum"]')?.value || 0;
+                    const obs = fila.querySelector('input[name="obs"]')?.value || "";
+
+                    if (temp !== "") {
+                        registros.push({ nombre, temp, hum, obs });
+                    }
+                }
+            });
+
+            if (registros.length === 0) { 
+                alert("No hay datos de temperatura para enviar"); 
+                btn.innerText = "GUARDAR REGISTRO";
+                return; 
+            }
+
+            // Cambiado a "fecha" para que el Excel lo reconozca correctamente
+            const datosParaEnviar = { responsable: resp, fecha: fechaVal, registros: registros };
             const URL_DE_GOOGLE = "https://script.google.com/macros/s/AKfycbz5vZIRBglYSV6UoMgcKoEAe0Mwh262t_0j7e1Lfou_zHSLp4O4zNHAQsujE9apCDMc5w/exec";
 
-           try {
-        await fetch(URL_DE_GOOGLE, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify(datosParaEnviar)
-        });
-        
-        alert("✅ ¡Registro enviado con éxito!");
-        location.reload(); // Esto recargará la página y el botón volverá a su texto original solo
-        
-    } catch (error) {
-        alert("❌ Error de conexión: " + error);
-        // Si hay un error, regresamos el texto manualmente para que el usuario pueda reintentar
-        document.querySelector('.btn-save').innerText = "GUARDAR REGISTRO";
-    }
-
-            
+            try {
+                await fetch(URL_DE_GOOGLE, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    body: JSON.stringify(datosParaEnviar)
+                });
+                alert("✅ ¡Registro enviado con éxito!");
+                location.reload(); 
+            } catch (error) {
+                alert("❌ Error de conexión: " + error);
+                btn.innerText = "GUARDAR REGISTRO";
+            }
         }
 
         if ('serviceWorker' in navigator) {
