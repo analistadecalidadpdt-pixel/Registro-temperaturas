@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Control de Calidad | Pan de Tata</title>
+    <style>
+        :root {
+            --accent-color: #c0163c; /* Guinda Pan de Tata */
+            --pink-bg: #fff5f7; 
+            --text-dark: #374151;
+            --text-gray: #6b7280;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 40px 20px;
+            background-color: #fcfcfc;
+            background-image: radial-gradient(#d1d5db 0.8px, transparent 0.8px);
+            background-size: 24px 24px;
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        /* Contenedor principal que encierra logo y botones */
+        .portal-wrapper {
+            background: white;
+            max-width: 900px;
+            width: 100%;
+            height: fit-content;
+            border-radius: 20px;
+            border: 1px solid #e5e7eb;
+            box-shadow: var(--card-shadow);
+            padding: 40px;
+            box-sizing: border-box;
+        }
+
+        /* Encabezado interno estilo Merma */
+        .internal-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 25px;
+            border-bottom: 1px dashed #e5e7eb;
+        }
+
+        .logo-container img {
+            height: 65px;
+            margin-right: 25px;
+        }
+
+        .title-group h2 {
+            margin: 0;
+            color: var(--accent-color);
+            font-size: 1.8rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .title-group p {
+            margin: 2px 0 0;
+            color: var(--text-gray);
+            font-size: 1rem;
+        }
+
+        /* Grid de acceso a las aplicaciones */
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+        }
+
+        /* Estilo de las tarjetas de acceso */
+        .card {
+            display: flex;
+            flex-direction: column;
+            padding: 35px;
+            text-decoration: none;
+            border-radius: 15px;
+            color: white;
+            background-color: var(--accent-color);
+            box-shadow: 0 4px 15px rgba(192, 22, 60, 0.15);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Variación ligera para la segunda tarjeta */
+        .card-alt {
+            filter: brightness(1.1);
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            filter: brightness(1.2);
+            box-shadow: 0 12px 25px rgba(192, 22, 60, 0.25);
+        }
+
+        .card:active {
+            transform: scale(0.97);
+        }
+
+        .card h3 {
+            margin: 0;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .card p {
+            margin: 12px 0 0;
+            font-size: 1rem;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        footer {
+            margin-top: 50px;
+            text-align: center;
+            color: var(--text-gray);
+            font-size: 0.8rem;
+            letter-spacing: 2px;
+            font-weight: 600;
+        }
+
+        @media (max-width: 600px) {
+            .portal-wrapper { padding: 25px; }
+            .internal-header { flex-direction: column; text-align: center; }
+            .logo-container img { margin-right: 0; margin-bottom: 15px; }
+            .title-group h2 { font-size: 1.4rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="portal-wrapper">
+        <header class="internal-header">
+            <div class="logo-container">
+                <img src="PDT.png" alt="Logo Pan de Tata">
+            </div>
+            <div class="title-group">
+                <h2>Departamento de Control de Calidad</h2>
+                <p>Gestión de Registros Técnicos</p>
+            </div>
+        </header>
+
+        <div class="menu-grid">
+            <a href="temperaturas.html" class="card">
+                <h3>🌡️ Temperatura y Humedad</h3>
+                <p>Monitoreo técnico de áreas, cavas y equipos de producción.</p>
+            </a>
+
+            <a href="https://merma-produccion.vercel.app/" class="card card-alt">
+                <h3>📉 Control de Mermas</h3>
+                <p>Registro y seguimiento de productos no conformes en planta.</p>
+            </a>
+        </div>
+
+        <footer>© 2026 SISTEMA DE GESTIÓN INTERNA</footer>
+    </div>
+
+</body>
+</html>
