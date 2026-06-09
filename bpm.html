@@ -322,7 +322,6 @@
 
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzOQ9aKqRG6XIxnWJv06Q6h3USoOqJMSwS33yz5UqoTWQ6EqiIL6mQK5xoXCdKEwt0tjg/exec";
-    let baseTrabajadores = [];
     const criterios = ["gorro", "uniforme", "tapabocas", "unas", "rostro", "guantes", "lmanos", "prendas", "botas", "telefono"];
 
     document.getElementById('fechaBpm').valueAsDate = new Date();
@@ -457,6 +456,7 @@
             return {
                 fecha: fecha,
                 area: area,
+                asistencia: fila.querySelector('.select-asistencia').value,
                 responsable: responsable,
                 trabajador: fila.getAttribute('data-nombre'),
                 gorro: fila.querySelector('[data-crit="gorro"]').value,
