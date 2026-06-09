@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Evaluación de BPM por Áreas | Pan de Tata</title>
+    <style>
+        :root {
+            --accent-color: #c0163c; /* Guinda Pan de Tata */
+            --pink-bg: #fff5f7; 
+            --border-light: #fce7eb; 
+            --text-gray: #6b7280;
+            --text-dark: #374151;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #fcfcfc;
+            background-image: radial-gradient(#d1d5db 0.8px, transparent 0.8px);
+            background-size: 24px 24px;
+            color: var(--text-dark);
+        }
+
+        .main-wrapper {
+            background: white;
+            max-width: 1400px;
+            margin: 0 auto;
+            border-radius: 20px;
+            border: 1px solid #e5e7eb;
+            box-shadow: var(--card-shadow);
+            padding: 30px;
+            box-sizing: border-box;
+        }
+
+        .internal-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed #e5e7eb;
+        }
+
+        .logo-container img {
+            height: 60px;
+            margin-right: 20px;
+        }
+
+        .title-group h2 {
+            margin: 0;
+            color: var(--accent-color);
+            font-size: 1.6rem;
+            font-weight: 800;
+            text-transform: uppercase;
+        }
+
+        .title-group p {
+            margin: 2px 0 0;
+            color: #71717a;
+            font-size: 0.9rem;
+        }
+
+        .info-grid {
+            background: var(--pink-bg);
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 800;
+            color: var(--text-gray);
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+
+        .input-group input, .input-group select {
+            width: 100%;
+            padding: 11px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            background: white;
+            box-sizing: border-box;
+            color: var(--text-dark);
+        }
+
+        /* Contenedor con scroll para evitar deformaciones */
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.01);
+            margin-bottom: 25px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: center;
+            /* Forzamos un ancho mínimo total para que las columnas respiren */
+            min-width: 1350px; 
+        }
+
+        th {
+            background: var(--pink-bg);
+            color: var(--accent-color);
+            font-size: 0.75rem;
+            font-weight: 800;
+            padding: 14px 8px;
+            border-bottom: 2px solid var(--border-light);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        /* Distribución y espaciado corregido de las columnas */
+        th.col-nombre, td.col-nombre {
+            text-align: left;
+            width: 260px;
+            min-width: 260px;
+            padding-left: 15px;
+        }
+
+        th.col-crit, td.col-crit {
+            width: 90px;
+            min-width: 90px;
+        }
+
+        th.col-obs, td.col-obs {
+            width: 220px;
+            min-width: 220px;
+            padding-right: 15px;
+        }
+
+        td {
+            padding: 12px 6px;
+            border-bottom: 1px solid #f1f5f9;
+            font-size: 0.85rem;
+            vertical-align: middle;
+        }
+
+        tr:hover td {
+            background-color: #fff9fa;
+        }
+
+        .worker-name {
+            font-weight: 700;
+            color: #334155;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Selectores corregidos para que no tapen los encabezados */
+        .select-status {
+            width: 100%;
+            padding: 6px 2px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            background-color: #ffffff;
+            color: #1e293b;
+            font-weight: 600;
+            cursor: pointer;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .input-obs {
+            width: 100%;
+            padding: 7px 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            box-sizing: border-box;
+            background-color: #fafafa;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: var(--accent-color);
+            color: white;
+            padding: 18px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 800;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 4px 12px rgba(192, 22, 60, 0.2);
+            transition: 0.2s;
+        }
+
+        .btn-submit:active { transform: scale(0.99); }
+
+        .area-vacia {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-gray);
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="main-wrapper">
+        <header class="internal-header">
+            <div class="logo-container">
+                <img src="PDT.png" alt="Logo Pan de Tata">
+            </div>
+            <div class="title-group">
+                <h2>Evaluación de BPM por Áreas</h2>
+                <p>Auditoría de Higiene y Personal Planta</p>
+            </div>
+        </header>
+
+        <div class="info-grid">
+            <div class="input-group">
+                <label>👤 RESPONSABLE DE EVALUACIÓN</label>
+                <input type="text" id="responsableEval" placeholder="Nombre del evaluador...">
+            </div>
+            <div class="input-group">
+                <label>📍 SELECCIONE EL ÁREA</label>
+                <select id="selectArea" onchange="filtrarPorArea()">
+                    <option value="">Seleccione un área...</option>
+                    <option value="Produccion">Producción</option>
+                    <option value="Empaquetado">Empaquetado</option>
+                    <option value="Producto Fresco">Producto Fresco</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>📅 FECHA</label>
+                <input type="date" id="fechaBpm">
+            </div>
+        </div>
+
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th class="col-nombre">Nombre del Trabajador</th>
+                        <th class="col-crit">Gorro</th>
+                        <th class="col-crit">Uniforme</th>
+                        <th class="col-crit">Tapabocas</th>
+                        <th class="col-crit">Uñas</th>
+                        <th class="col-crit">Rostro</th>
+                        <th class="col-crit">Guantes</th>
+                        <th class="col-crit">L. Manos</th>
+                        <th class="col-crit">Prendas</th>
+                        <th class="col-crit">Botas</th>
+                        <th class="col-crit">Teléfono</th>
+                        <th class="col-obs">Observación</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaBpmBody">
+                    <tr>
+                        <td colspan="12" class="area-vacia">Cargando base de datos del personal...</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <button class="btn-submit" onclick="enviarEvaluacionMasiva()">
+            🚀 GUARDAR AUDITORÍA DEL ÁREA
+        </button>
+    </div>
+
+<script>
+    // URL de tu Web App de Google Apps Script
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzOQ9aKqRG6XIxnWJv06Q6h3USoOqJMSwS33yz5UqoTWQ6EqiIL6mQK5xoXCdKEwt0tjg/exec";
+
+    // Lista global que se llenará con lo que lea del Sheets
+    let baseTrabajadores = [];
+    const criterios = ["gorro", "uniforme", "tapabocas", "unas", "rostro", "guantes", "lmanos", "prendas", "botas", "telefono"];
+
+    document.getElementById('fechaBpm').valueAsDate = new Date();
+
+    // 1. Conexión real: Traer los trabajadores directamente desde el Sheets al cargar la página
+    async function obtenerTrabajadoresDesdeSheets() {
+        try {
+            const response = await fetch(`${SCRIPT_URL}?action=getTrabajadores`);
+            baseTrabajadores = await response.json();
+            
+            // Si la lista cargó con éxito, limpiamos el mensaje inicial de la tabla
+            document.getElementById('tablaBpmBody').innerHTML = `
+                <tr>
+                    <td colspan="12" class="area-vacia">Seleccione un área en la parte superior para desplegar la lista de personal.</td>
+                </tr>`;
+        } catch (error) {
+            console.error("Error al conectar con la base de datos de Google Sheets:", error);
+            document.getElementById('tablaBpmBody').innerHTML = `
+                <tr>
+                    <td colspan="12" class="area-vacia" style="color: #ef4444;">
+                        ⚠️ No se pudo conectar con Google Sheets. Verifica que la URL del script sea correcta.
+                    </td>
+                </tr>`;
+        }
+    }
+
+    // 2. Filtrar y renderizar la tabla sin límites fijos de filas
+    function filtrarPorArea() {
+        const areaSeleccionada = document.getElementById('selectArea').value;
+        const tbody = document.getElementById('tablaBpmBody');
+        
+        if (!areaSeleccionada) {
+            tbody.innerHTML = '<tr><td colspan="12" class="area-vacia">Seleccione un área en la parte superior para desplegar la lista de personal.</td></tr>';
+            return;
+        }
+
+        // Filtra dinámicamente según los registros que encuentre en la pestaña del Excel
+        const filtrados = baseTrabajadores.filter(t => t.area === areaSeleccionada);
+
+        if (filtrados.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="12" class="area-vacia">No se encontraron trabajadores asignados a esta área en el Sheets.</td></tr>';
+            return;
+        }
+
+        tbody.innerHTML = "";
+        
+        // Renderizado limpio de la matriz horizontal
+        filtrados.forEach(trabajador => {
+            let filaHTML = `<tr class="fila-trabajador" data-nombre="${trabajador.nombre}">
+                <td class="col-nombre worker-name">👤 ${trabajador.nombre}</td>`;
+
+            criterios.forEach(crit => {
+                filaHTML += `
+                    <td class="col-crit">
+                        <select data-crit="${crit}" class="select-status" onchange="cambiarColorSelect(this)">
+                            <option value="Cumple" selected>Cumple</option>
+                            <option value="No Cumple">No Cumple</option>
+                            <option value="N/A">N/A</option>
+                        </select>
+                    </td>`;
+            });
+
+            filaHTML += `
+                <td class="col-obs">
+                    <input type="text" class="input-obs" data-obs="nota" placeholder="Nota de la fila...">
+                </td>
+            </tr>`;
+            
+            tbody.innerHTML += filaHTML;
+        });
+    }
+
+    function cambiarColorSelect(select) {
+        if (select.value === "No Cumple") {
+            select.style.borderColor = "#ef4444";
+            select.style.backgroundColor = "#fef2f2";
+            select.style.color = "#b91c1c";
+        } else {
+            select.style.borderColor = "#e2e8f0";
+            select.style.backgroundColor = "#ffffff";
+            select.style.color = "#1e293b";
+        }
+    }
+
+    // 3. Recolectar la matriz completa para guardarla en la pestaña Auditorias_BPM
+    async function enviarEvaluacionMasiva() {
+        const responsable = document.getElementById('responsableEval').value.trim();
+        const area = document.getElementById('selectArea').value;
+        const fecha = document.getElementById('fechaBpm').value;
+        const filas = document.querySelectorAll('.fila-trabajador');
+        const btn = document.querySelector('.btn-submit');
+
+        if (!responsable) { alert("Por favor, ingresa el nombre del Responsable de la Evaluación."); return; }
+        if (!area) { alert("Por favor, selecciona un área."); return; }
+        if (filas.length === 0) { alert("No hay filas de personal cargadas para evaluar."); return; }
+
+        btn.innerText = "● REGISTRANDO FILAS EN SHEETS...";
+        btn.disabled = true;
+
+        const registros = Array.from(filas).map(fila => {
+            return {
+                fecha: fecha,
+                area: area,
+                responsable: responsable,
+                trabajador: fila.getAttribute('data-nombre'),
+                gorro: fila.querySelector('[data-crit="gorro"]').value,
+                uniforme: fila.querySelector('[data-crit="uniforme"]').value,
+                tapabocas: fila.querySelector('[data-crit="tapabocas"]').value,
+                unas: fila.querySelector('[data-crit="unas"]').value,
+                rostro: fila.querySelector('[data-crit="rostro"]').value,
+                guantes: fila.querySelector('[data-crit="guantes"]').value,
+                lmanos: fila.querySelector('[data-crit="lmanos"]').value,
+                prendas: fila.querySelector('[data-crit="prendas"]').value,
+                botas: fila.querySelector('[data-crit="botas"]').value,
+                telefono: fila.querySelector('[data-crit="telefono"]').value,
+                observaciones: fila.querySelector('[data-obs="nota"]').value
+            };
+        });
+
+        try {
+            await fetch(SCRIPT_URL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({ action: "addAuditoriaMasiva", datos: registros })
+            });
+            alert(`✅ ¡Éxito! Se subieron las líneas de evaluación de los ${registros.length} trabajadores.`);
+            location.reload();
+        } catch (e) {
+            alert("❌ Error al intentar sincronizar con el archivo Excel.");
+            btn.innerText = "🚀 GUARDAR AUDITORÍA DEL ÁREA";
+            btn.disabled = false;
+        }
+    }
+
+    // Iniciamos la llamada automática al abrir la aplicación web
+    obtenerTrabajadoresDesdeSheets();
+</script>
+</body>
+</html>
