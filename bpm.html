@@ -457,7 +457,6 @@
                 fecha: fecha,
                 area: area,
                 asistencia: fila.querySelector('.select-asistencia').value,
-                responsable: responsable,
                 trabajador: fila.getAttribute('data-nombre'),
                 gorro: fila.querySelector('[data-crit="gorro"]').value,
                 uniforme: fila.querySelector('[data-crit="uniforme"]').value,
@@ -469,7 +468,8 @@
                 prendas: fila.querySelector('[data-crit="prendas"]').value,
                 botas: fila.querySelector('[data-crit="botas"]').value,
                 telefono: fila.querySelector('[data-crit="telefono"]').value,
-                observaciones: fila.querySelector('[data-obs="nota"]').value
+                observaciones: fila.querySelector('[data-obs="nota"]').value,
+                responsable: responsable
             };
         });
 
