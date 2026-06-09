@@ -93,10 +93,10 @@
             color: var(--text-dark);
         }
 
-        /* Contenedor con scroll para evitar deformaciones */
         .table-responsive {
             width: 100%;
             overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
             border: 1px solid #e5e7eb;
             border-radius: 12px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.01);
@@ -107,8 +107,8 @@
             width: 100%;
             border-collapse: collapse;
             text-align: center;
-            /* Forzamos un ancho mínimo total para que las columnas respiren */
-            min-width: 1350px; 
+            /* Reducimos el ancho mínimo total ya que las columnas C/N ocupan la mitad de espacio */
+            min-width: 950px; 
         }
 
         th {
@@ -116,34 +116,38 @@
             color: var(--accent-color);
             font-size: 0.75rem;
             font-weight: 800;
-            padding: 14px 8px;
+            padding: 14px 6px;
             border-bottom: 2px solid var(--border-light);
             text-transform: uppercase;
             letter-spacing: 0.5px;
             white-space: nowrap;
         }
 
-        /* Distribución y espaciado corregido de las columnas */
+        /* Ajustes de columnas optimizados para móvil */
+        th.col-asistencia {
+            width: 100px;
+            min-width: 100px;
+        }
+
         th.col-nombre, td.col-nombre {
-            text-align: left;
-            width: 260px;
-            min-width: 260px;
-            padding-left: 15px;
+            text-align: center; /* Centrado como solicitaste */
+            width: 180px;
+            min-width: 180px;
         }
 
         th.col-crit, td.col-crit {
-            width: 90px;
-            min-width: 90px;
+            width: 50px;
+            min-width: 50px;
         }
 
         th.col-obs, td.col-obs {
-            width: 220px;
-            min-width: 220px;
+            width: 180px;
+            min-width: 180px;
             padding-right: 15px;
         }
 
         td {
-            padding: 12px 6px;
+            padding: 10px 4px;
             border-bottom: 1px solid #f1f5f9;
             font-size: 0.85rem;
             vertical-align: middle;
@@ -153,28 +157,54 @@
             background-color: #fff9fa;
         }
 
+        /* Estilo limpio para los nombres separados en dos líneas y sin negrita */
         .worker-name {
-            font-weight: 700;
+            font-weight: 400; /* Sin negrita */
             color: #334155;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+            line-height: 1.2;
+            text-align: left;
+            display: inline-block;
+        }
+        
+        .worker-name span {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-gray);
         }
 
-        /* Selectores corregidos para que no tapen los encabezados */
+        /* Selector de asistencia compacto */
+        .select-asistencia {
+            padding: 4px 2px;
+            font-size: 0.75rem;
+            border-radius: 6px;
+            border: 1px solid #e2e8f0;
+            background-color: #f3f4f6;
+            cursor: pointer;
+            font-weight: 600;
+        }
+        .status-asistente { color: #16a34a; background-color: #f0fdf4; border-color: #bbf7d0; }
+        .status-inasistente { color: #dc2626; background-color: #fef2f2; border-color: #fecaca; }
+
+        /* Menú desplegable ultra pequeño y optimizado (C / N / N/A) */
         .select-status {
-            width: 100%;
-            padding: 6px 2px;
+            width: 44px; /* Tamaño súper reducido */
+            padding: 6px 0px;
             border: 1px solid #e2e8f0;
             border-radius: 6px;
-            font-size: 0.8rem;
+            font-size: 0.85rem;
             background-color: #ffffff;
-            color: #1e293b;
-            font-weight: 600;
+            color: #16a34a; /* Por defecto verde Cumple */
+            font-weight: 700;
             cursor: pointer;
             box-sizing: border-box;
             text-align: center;
+            text-align-last: center; /* Centra la letra dentro del select en Android/iOS */
         }
+
+        /* Colores específicos de selección para las letras compactas */
+        .val-c { color: #16a34a; border-color: #bbf7d0; background-color: #f0fdf4; }
+        .val-n { color: #dc2626; border-color: #fecaca; background-color: #fef2f2; }
+        .val-na { color: #71717a; border-color: #e4e4e7; background-color: #f4f4f5; }
 
         .input-obs {
             width: 100%;
@@ -184,6 +214,21 @@
             font-size: 0.8rem;
             box-sizing: border-box;
             background-color: #fafafa;
+        }
+
+        /* Control visual cuando la fila pasa a Inasistente */
+        tr.row-inasistente {
+            background-color: #f9fafb;
+        }
+        tr.row-inasistente td.col-nombre .worker-name,
+        tr.row-inasistente td.col-nombre .worker-name span {
+            color: #9ca3af !important;
+        }
+        tr.row-inasistente .select-status {
+            background-color: #f4f4f5 !important;
+            color: #a1a1aa !important;
+            border-color: #e4e4e7 !important;
+            pointer-events: none; /* Bloquea clics en el teléfono */
         }
 
         .btn-submit {
@@ -248,6 +293,7 @@
             <table>
                 <thead>
                     <tr>
+                        <th class="col-asistencia">Asistencia</th>
                         <th class="col-nombre">Nombre del Trabajador</th>
                         <th class="col-crit">Gorro</th>
                         <th class="col-crit">Uniforme</th>
@@ -264,7 +310,7 @@
                 </thead>
                 <tbody id="tablaBpmBody">
                     <tr>
-                        <td colspan="12" class="area-vacia">Cargando base de datos del personal...</td>
+                        <td colspan="13" class="area-vacia">Cargando base de datos del personal...</td>
                     </tr>
                 </tbody>
             </table>
@@ -276,68 +322,80 @@
     </div>
 
 <script>
-    // URL de tu Web App de Google Apps Script
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzOQ9aKqRG6XIxnWJv06Q6h3USoOqJMSwS33yz5UqoTWQ6EqiIL6mQK5xoXCdKEwt0tjg/exec";
+    const SCRIPT_URL = "https://docs.google.com/spreadsheets/d/1H1jCfLYpbgzjMXMQCR7MzyPapbGwIwNmcOml2sze-Tw/edit?gid=877373572#gid=877373572
 
-    // Lista global que se llenará con lo que lea del Sheets
     let baseTrabajadores = [];
     const criterios = ["gorro", "uniforme", "tapabocas", "unas", "rostro", "guantes", "lmanos", "prendas", "botas", "telefono"];
 
     document.getElementById('fechaBpm').valueAsDate = new Date();
 
-    // 1. Conexión real: Traer los trabajadores directamente desde el Sheets al cargar la página
     async function obtenerTrabajadoresDesdeSheets() {
         try {
             const response = await fetch(`${SCRIPT_URL}?action=getTrabajadores`);
             baseTrabajadores = await response.json();
             
-            // Si la lista cargó con éxito, limpiamos el mensaje inicial de la tabla
             document.getElementById('tablaBpmBody').innerHTML = `
                 <tr>
-                    <td colspan="12" class="area-vacia">Seleccione un área en la parte superior para desplegar la lista de personal.</td>
+                    <td colspan="13" class="area-vacia">Seleccione un área en la parte superior para desplegar la lista de personal.</td>
                 </tr>`;
         } catch (error) {
             console.error("Error al conectar con la base de datos de Google Sheets:", error);
             document.getElementById('tablaBpmBody').innerHTML = `
                 <tr>
-                    <td colspan="12" class="area-vacia" style="color: #ef4444;">
+                    <td colspan="13" class="area-vacia" style="color: #ef4444;">
                         ⚠️ No se pudo conectar con Google Sheets. Verifica que la URL del script sea correcta.
                     </td>
                 </tr>`;
         }
     }
 
-    // 2. Filtrar y renderizar la tabla sin límites fijos de filas
+    // 2. Renderizado dinámico y optimizado con división de nombres y control de asistencia
     function filtrarPorArea() {
         const areaSeleccionada = document.getElementById('selectArea').value;
         const tbody = document.getElementById('tablaBpmBody');
         
         if (!areaSeleccionada) {
-            tbody.innerHTML = '<tr><td colspan="12" class="area-vacia">Seleccione un área en la parte superior para desplegar la lista de personal.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="13" class="area-vacia">Seleccione un área en la parte superior para desplegar la lista de personal.</td></tr>';
             return;
         }
 
-        // Filtra dinámicamente según los registros que encuentre en la pestaña del Excel
         const filtrados = baseTrabajadores.filter(t => t.area === areaSeleccionada);
 
         if (filtrados.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="12" class="area-vacia">No se encontraron trabajadores asignados a esta área en el Sheets.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="13" class="area-vacia">No se encontraron trabajadores asignados a esta área en el Sheets.</td></tr>';
             return;
         }
 
         tbody.innerHTML = "";
         
-        // Renderizado limpio de la matriz horizontal
-        filtrados.forEach(trabajador => {
-            let filaHTML = `<tr class="fila-trabajador" data-nombre="${trabajador.nombre}">
-                <td class="col-nombre worker-name">👤 ${trabajador.nombre}</td>`;
+        filtrados.forEach((trabajador, index) => {
+            // Lógica para separar inteligentemente primer nombre y apellido en dos líneas
+            const partesNombre = trabajador.nombre.trim().split(" ");
+            let primerNombre = partesNombre[0] || "";
+            if(partesNombre[1] && partesNombre[1].length <= 3) { 
+                primerNombre += " " + partesNombre[1]; // Une conectores cortos tipo "De", "Del"
+            }
+            const apellido = trabajador.nombre.replace(primerNombre, "").trim();
+
+            let filaHTML = `
+            <tr class="fila-trabajador" id="fila-bpm-${index}" data-nombre="${trabajador.nombre}">
+                <td class="col-asistencia">
+                    <select class="select-asistencia status-asistente" onchange="controlarAsistenciaFila(${index}, this)">
+                        <option value="presente" selected>Asistente</option>
+                        <option value="ausente">Inasistente</option>
+                    </select>
+                </td>
+                <td class="col-nombre">
+                    <div class="worker-name">${primerNombre} ${apellido ? `<span>${apellido}</span>` : ''}</div>
+                </td>`;
 
             criterios.forEach(crit => {
+                // Modificado para usar solo C, N, N/A y la clase val-c inicial compacta
                 filaHTML += `
                     <td class="col-crit">
-                        <select data-crit="${crit}" class="select-status" onchange="cambiarColorSelect(this)">
-                            <option value="Cumple" selected>Cumple</option>
-                            <option value="No Cumple">No Cumple</option>
+                        <select data-crit="${crit}" class="select-status val-c" onchange="cambiarColorSelect(this)">
+                            <option value="Cumple" selected>C</option>
+                            <option value="No Cumple">N</option>
                             <option value="N/A">N/A</option>
                         </select>
                     </td>`;
@@ -353,19 +411,45 @@
         });
     }
 
+    // Maneja los estilos de color compactos según la opción seleccionada
     function cambiarColorSelect(select) {
+        select.className = "select-status"; // Resetea clase base
         if (select.value === "No Cumple") {
-            select.style.borderColor = "#ef4444";
-            select.style.backgroundColor = "#fef2f2";
-            select.style.color = "#b91c1c";
+            select.classList.add("val-n");
+        } else if (select.value === "N/A") {
+            select.classList.add("val-na");
         } else {
-            select.style.borderColor = "#e2e8f0";
-            select.style.backgroundColor = "#ffffff";
-            select.style.color = "#1e293b";
+            select.classList.add("val-c");
         }
     }
 
-    // 3. Recolectar la matriz completa para guardarla en la pestaña Auditorias_BPM
+    // NUEVA FUNCIÓN: Automatiza el bloqueo de la fila y cambia los valores a N/A (o el valor que prefieras) si falta
+    function controlarAsistenciaFila(idIndex, selectAsistencia) {
+        const fila = document.getElementById('fila-bpm-' + idIndex);
+        const selectsCriterios = fila.querySelectorAll('.select-status');
+
+        selectAsistencia.className = 'select-asistencia';
+        if (selectAsistencia.value === 'presente') {
+            selectAsistencia.classList.add('status-asistente');
+            fila.classList.remove('row-inasistente');
+            
+            // Regresa todos los parámetros a Cumple (C) si se vuelve a marcar como presente
+            selectsCriterios.forEach(select => {
+                select.value = 'Cumple';
+                select.className = 'select-status val-c';
+            });
+        } else {
+            selectAsistencia.classList.add('status-inasistente');
+            fila.classList.add('row-inasistente');
+            
+            // Si está inasistente, cambia automáticamente a "N/A" todos los campos y aplica estilos grises
+            selectsCriterios.forEach(select => {
+                select.value = 'N/A';
+                select.className = 'select-status val-na';
+            });
+        }
+    }
+
     async function enviarEvaluacionMasiva() {
         const responsable = document.getElementById('responsableEval').value.trim();
         const area = document.getElementById('selectArea').value;
@@ -415,7 +499,6 @@
         }
     }
 
-    // Iniciamos la llamada automática al abrir la aplicación web
     obtenerTrabajadoresDesdeSheets();
 </script>
 </body>
