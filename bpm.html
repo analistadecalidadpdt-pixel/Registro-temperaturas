@@ -158,19 +158,18 @@
         }
 
         /* Estilo limpio para los nombres separados en dos líneas y sin negrita */
-        .worker-name {
-            font-weight: 400; /* Sin negrita */
-            color: #334155;
-            line-height: 1.2;
-            text-align: left;
-            display: inline-block;
-        }
-        
-        .worker-name span {
-            display: block;
-            font-size: 0.8rem;
-            color: var(--text-gray);
-        }
+        /* Estilo limpio, compacto y en una sola línea para el personal */
+.worker-name {
+    font-weight: 500; /* Ni muy grueso ni muy delgado, estilo profesional */
+    color: #475569;   /* Un tono gris oscuro elegante */
+    font-size: 0.85rem; /* Tamaño compacto para que respire la fila */
+    text-align: left;
+    white-space: nowrap; /* Fuerza a que se mantenga en una sola línea */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Si el nombre es ultra largo, añade "..." al final en vez de romper la tabla */
+    display: block;
+    max-width: 220px; /* Límite para proteger el espacio en teléfonos */
+}
 
         /* Selector de asistencia compacto */
         .select-asistencia {
@@ -322,8 +321,7 @@
     </div>
 
 <script>
-    const SCRIPT_URL = "https://docs.google.com/spreadsheets/d/1H1jCfLYpbgzjMXMQCR7MzyPapbGwIwNmcOml2sze-Tw/edit?gid=877373572#gid=877373572
-
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzOQ9aKqRG6XIxnWJv06Q6h3USoOqJMSwS33yz5UqoTWQ6EqiIL6mQK5xoXCdKEwt0tjg/exec";
     let baseTrabajadores = [];
     const criterios = ["gorro", "uniforme", "tapabocas", "unas", "rostro", "guantes", "lmanos", "prendas", "botas", "telefono"];
 
@@ -368,15 +366,7 @@
 
         tbody.innerHTML = "";
         
-        filtrados.forEach((trabajador, index) => {
-            // Lógica para separar inteligentemente primer nombre y apellido en dos líneas
-            const partesNombre = trabajador.nombre.trim().split(" ");
-            let primerNombre = partesNombre[0] || "";
-            if(partesNombre[1] && partesNombre[1].length <= 3) { 
-                primerNombre += " " + partesNombre[1]; // Une conectores cortos tipo "De", "Del"
-            }
-            const apellido = trabajador.nombre.replace(primerNombre, "").trim();
-
+      filtrados.forEach((trabajador, index) => {
             let filaHTML = `
             <tr class="fila-trabajador" id="fila-bpm-${index}" data-nombre="${trabajador.nombre}">
                 <td class="col-asistencia">
@@ -386,11 +376,10 @@
                     </select>
                 </td>
                 <td class="col-nombre">
-                    <div class="worker-name">${primerNombre} ${apellido ? `<span>${apellido}</span>` : ''}</div>
+                    <span class="worker-name"> ${trabajador.nombre.trim()}</span>
                 </td>`;
 
             criterios.forEach(crit => {
-                // Modificado para usar solo C, N, N/A y la clase val-c inicial compacta
                 filaHTML += `
                     <td class="col-crit">
                         <select data-crit="${crit}" class="select-status val-c" onchange="cambiarColorSelect(this)">
