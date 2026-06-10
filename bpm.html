@@ -379,12 +379,18 @@
                 </td>`;
 
             criterios.forEach(crit => {
+                // 1. Evaluamos la regla: ¿Es el área de Producción y el criterio de guantes?
+                const esProduccionSinGuantes = (areaSeleccionada.toLowerCase().includes('produccion') || areaSeleccionada.toLowerCase().includes('producción')) && crit === 'guantes';
+                
+                // 2. Si cumple la regla, la clase inicial es 'val-na' (gris), si no, tu clase estándar 'val-c' (verde)
+                const claseDinamica = esProduccionSinGuantes ? 'select-status val-na' : 'select-status val-c';
+
                 filaHTML += `
                     <td class="col-crit">
-                        <select data-crit="${crit}" class="select-status val-c" onchange="cambiarColorSelect(this)">
-                            <option value="Cumple" selected>C</option>
+                        <select data-crit="${crit}" class="${claseDinamica}" onchange="cambiarColorSelect(this)">
+                            <option value="Cumple" ${!esProduccionSinGuantes ? 'selected' : ''}>C</option>
                             <option value="No Cumple">N</option>
-                            <option value="N/A">N/A</option>
+                            <option value="N/A" ${esProduccionSinGuantes ? 'selected' : ''}>N/A</option>
                         </select>
                     </td>`;
             });
