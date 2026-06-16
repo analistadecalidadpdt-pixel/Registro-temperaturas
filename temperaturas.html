@@ -63,7 +63,7 @@
             font-size: 0.9rem;
         }
 
-        /* Recuadro de Responsable y Fecha con sombreado rosa */
+        /* Recuadro de Info adaptado para la nueva distribución */
         .info-grid {
             background: var(--pink-bg);
             border: 1px solid var(--border-light);
@@ -72,7 +72,20 @@
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Fila secundaria exclusiva para los filtros en cascada */
+        .filter-grid {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 12px;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
             margin-bottom: 30px;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.01);
         }
 
         .input-group label {
@@ -84,7 +97,7 @@
             margin-bottom: 8px;
         }
 
-        .input-group input {
+        .input-group input, .input-group select {
             width: 100%;
             padding: 10px;
             border: 1px solid #e2e8f0;
@@ -92,6 +105,7 @@
             font-size: 0.95rem;
             background: white;
             box-sizing: border-box;
+            height: 44px;
         }
 
         .section-tag {
@@ -111,6 +125,17 @@
             letter-spacing: 0.5px;
         }
 
+        .status-badge {
+            background: #bbf7d0;
+            color: #15803d;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 800;
+            margin-left: auto;
+            display: none;
+        }
+
         .table-container {
             border: 1px solid #e5e7eb;
             border-radius: 10px;
@@ -125,16 +150,16 @@
         .category-row {
             background: var(--pink-bg);
             color: #64748b;
-            font-size: 0.65rem;
+            font-size: 0.75rem;
             font-weight: 800;
             text-transform: uppercase;
-            text-align: center;
-            padding: 10px;
+            text-align: left;
+            padding: 12px 15px;
             border-bottom: 1px solid var(--border-light);
         }
 
         td {
-            padding: 10px;
+            padding: 10px 15px;
             border-bottom: 1px solid #f1f5f9;
         }
 
@@ -154,9 +179,8 @@
             box-sizing: border-box;
         }
 
-        /* Observación pegada al borde derecho */
         .td-obs {
-            padding-right: 0 !important;
+            padding-right: 15px !important;
             width: 35%;
         }
 
@@ -183,12 +207,18 @@
             transition: 0.2s;
         }
 
-        .btn-submit:active {
+        .btn-submit:disabled {
+            background: #cbd5e1;
+            box-shadow: none;
+            cursor: not-allowed;
+        }
+
+        .btn-submit:active:not(:disabled) {
             transform: scale(0.98);
         }
 
-        @media (max-width: 600px) {
-            .info-grid { grid-template-columns: 1fr; }
+        @media (max-width: 768px) {
+            .info-grid, .filter-grid { grid-template-columns: 1fr; gap: 15px; }
             .main-wrapper { padding: 15px; }
         }
     </style>
@@ -217,111 +247,245 @@
             </div>
         </div>
 
+        <div class="filter-grid">
+            <div class="input-group">
+                <label>📍 1. Seleccione Ubicación</label>
+                <select id="selectUbicacion" onchange="filtrarAreasPorUbicacion()">
+                    <option value="">Cargando ubicaciones...</option>
+                </select>
+            </div>
+            <div class="input-group">
+                <label>🔍 2. Seleccione Área</label>
+                <select id="selectArea" onchange="renderizarElementosArea()" disabled>
+                    <option value="">Seleccione primero ubicación...</option>
+                </select>
+            </div>
+        </div>
+
         <div class="section-tag">
             <h3>📋 DETALLES DE REGISTRO POR ÁREAS</h3>
+            <span id="badgeCompletado" class="status-badge">✓ GUARDADO</span>
         </div>
 
         <div class="table-container">
             <table>
                 <tbody id="tablaBody">
-                    </tbody>
+                    <tr>
+                        <td style="text-align: center; padding: 40px; color: var(--text-gray); font-style: italic;">
+                            Sincronizando configuraciones con Google Sheets...
+                        </td>
+                    </tr>
+                </tbody>
             </table>
         </div>
 
-        <button class="btn-submit" onclick="enviar()">
-            🚀 GUARDAR REGISTRO COMPLETO
+        <button class="btn-submit" id="btnGuardar" onclick="enviar()" disabled>
+            🚀 GUARDAR SECCIÓN SELECCIONADA
         </button>
     </div>
 
 <script>
-    const secciones = [
-        { 
-            titulo: "Áreas (Límite: 30°C)", 
-            limite: 30, 
-            items: ["Almacén MP I", "Área de sótano", "Almacén de calidad", "Almacén de MP II", "Área de Premezcla", "Almacén de PT", "Área de lavado PDT", "Área de empaquetado", "Cuarto de enfriado", "Área de charcuteria", "Área de porcionado", "Prod. fresco PDT", "Área de wash PDT", "Fermentadora de producción", "Producción PDT", "Recepción de MP", "Área de Batata I", "Área de Batata II", "Área de hojaldre"], 
-            hasHum: true 
-        },
-        { 
-            titulo: "Refrigeración (Máx 5°C)", 
-            limite: 5, 
-            items: ["Cava Conservadora 1", "Cava Conservadora 2", "Cava Conservadora 4", "Nevera #14 True"], 
-            hasHum: false 
-        },
-        { 
-            titulo: "Congelación (Máx -10°C)", 
-            limite: -10, 
-            items: ["Cava Congelación 1", "Cava Congeladora 4", "Cava congeladora 3", "Ultra congelador (hojaldre)", "Congelador #6 (hojaldre)", "Congelador (hojaldre)"], 
-            hasHum: false 
-        }
-    ];
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxpIFu6gSkt6bn7LhbX5jJdFgJNOF_1cfjZgt5oE1x91vHRy7KggXOJPlrFQEdAOuVPjQ/exec";
+    
+    // Aquí guardaremos la estructura completa indexada por Ubicación -> Área
+    let estructuraUbicaciones = {}; 
+    let seccionesRegistradasHoy = new Set(); 
 
-    const tbody = document.getElementById('tablaBody');
     document.getElementById('fechaMain').valueAsDate = new Date();
 
-    secciones.forEach(sec => {
-        tbody.innerHTML += `<tr><td colspan="4" class="category-row">${sec.titulo}</td></tr>`;
+    // 1. Carga inicial: Lee el Sheets y arma el árbol de dependencias de ubicaciones
+    async function inicializarApp() {
+        try {
+            const response = await fetch(`${SCRIPT_URL}?action=getCatalogo`);
+            const catalogoCrudo = await response.json();
+            
+            // Procesamos la respuesta para agruparla jerárquicamente por Ubicación
+            estructuraUbicaciones = {};
+            
+            catalogoCrudo.forEach(item => {
+                const ubi = item.ubicacion; // "Sótano", "Piso 1", etc.
+                const area = item.titulo;    // "Almacén", "Hojaldre", etc.
+                
+                if (!estructuraUbicaciones[ubi]) {
+                    estructuraUbicaciones[ubi] = {};
+                }
+                estructuraUbicaciones[ubi][area] = item;
+            });
+
+            // Rellenamos el primer selector (Ubicaciones únicas)
+            const selectUbi = document.getElementById('selectUbicacion');
+            selectUbi.innerHTML = '<option value="">-- Elige Planta/Nivel --</option>';
+            
+            Object.keys(estructuraUbicaciones).forEach(ubi => {
+                selectUbi.innerHTML += `<option value="${ubi}">${ubi}</option>`;
+            });
+
+            document.getElementById('tablaBody').innerHTML = `
+                <tr>
+                    <td style="text-align: center; padding: 40px; color: var(--text-gray); font-style: italic;">
+                        Por favor, elija la ubicación y el área correspondientes arriba para desplegar las celdas.
+                    </td>
+                </tr>`;
+        } catch (error) {
+            console.error("Error al inicializar catálogo:", error);
+            document.getElementById('tablaBody').innerHTML = `
+                <tr>
+                    <td style="text-align: center; padding: 40px; color: #ef4444; font-weight: bold;">
+                        ⚠️ Error de sincronización. Verifica tu Google Sheets o el código de Apps Script.
+                    </td>
+                </tr>`;
+        }
+    }
+
+    // 2. Paso intermedio: Al cambiar ubicación, desbloquea y filtra las áreas de ese nivel
+    function filtrarAreasPorUbicacion() {
+        const ubiSeleccionada = document.getElementById('selectUbicacion').value;
+        const selectArea = document.getElementById('selectArea');
+        const tbody = document.getElementById('tablaBody');
+        const btn = document.getElementById('btnGuardar');
+        const badge = document.getElementById('badgeCompletado');
+
+        tbody.innerHTML = `<tr><td style="text-align: center; padding: 40px; color: var(--text-gray);">Seleccione el área específica en la parte superior.</td></tr>`;
+        btn.disabled = true;
+        badge.style.display = "none";
+
+        if (ubiSeleccionada === "") {
+            selectArea.innerHTML = '<option value="">Seleccione primero ubicación...</option>';
+            selectArea.disabled = true;
+            return;
+        }
+
+        // Extraemos las áreas asociadas únicamente a esa ubicación
+        const areasDisponibles = estructuraUbicaciones[ubiSeleccionada];
+        
+        selectArea.innerHTML = '<option value="">-- Seleccione Área --</option>';
+        Object.keys(areasDisponibles).forEach(area => {
+            selectArea.innerHTML += `<option value="${area}">${area}</option>`;
+        });
+        
+        selectArea.disabled = false;
+    }
+
+    // 3. Renderizado final de los equipos/celdas del área escogida
+    function renderizarElementosArea() {
+        const ubi = document.getElementById('selectUbicacion').value;
+        const area = document.getElementById('selectArea').value;
+        const tbody = document.getElementById('tablaBody');
+        const btn = document.getElementById('btnGuardar');
+        const badge = document.getElementById('badgeCompletado');
+
+        if (area === "") {
+            tbody.innerHTML = `<tr><td style="text-align: center; padding: 40px; color: var(--text-gray);">Seleccione el área específica en la parte superior.</td></tr>`;
+            btn.disabled = true;
+            badge.style.display = "none";
+            return;
+        }
+
+        const sec = estructuraUbicaciones[ubi][area];
+        btn.disabled = false;
+        
+        // Comprobar si ya se guardó este sector concreto hoy
+        const idIdentificadorUnico = `${ubi}-${sec.titulo}`;
+        if (seccionesRegistradasHoy.has(idIdentificadorUnico)) {
+            badge.style.display = "block";
+        } else {
+            badge.style.display = "none";
+        }
+
+        let html = `<tr><td colspan="4" class="category-row">${ubi} > ${sec.titulo} (Máx: ${sec.limite}°C)</td></tr>`;
+        
         sec.items.forEach(nombre => {
             const humField = sec.hasHum ? 
                 `<input type="number" name="hum" step="0.1" class="input-table" placeholder="Hum %">` : 
                 `<input type="number" value="0" readonly style="background:#f1f5f9; border:none; color:#cbd5e1" class="input-table">`;
             
-            tbody.innerHTML += `
-                <tr>
+            html += `
+                <tr class="fila-medicion">
                     <td class="item-name">${nombre}</td>
-                    <td style="width: 12%"><input type="number" name="temp" step="0.1" class="input-table" placeholder="°C" onchange="validarTemp(this, ${sec.limite})"></td>
-                    <td style="width: 12%">${humField}</td>
+                    <td style="width: 15%"><input type="number" name="temp" step="0.1" class="input-table" placeholder="°C" onchange="validarTemp(this, ${sec.limite})"></td>
+                    <td style="width: 15%">${humField}</td>
                     <td class="td-obs"><input type="text" name="obs" class="input-table input-obs" placeholder="Observación"></td>
                 </tr>`;
         });
-    });
+
+        tbody.innerHTML = html;
+    }
 
     function validarTemp(input, limite) {
-        if (parseFloat(input.value) > limite) { 
+        if (input.value !== "" && parseFloat(input.value) > limite) { 
             input.style.backgroundColor = "#fef2f2";
             input.style.borderColor = "#ef4444";
+            input.style.color = "#ef4444";
         } else { 
             input.style.backgroundColor = "white";
             input.style.borderColor = "#e2e8f0";
+            input.style.color = "inherit";
         }
     }
 
+    // 4. Envío parcial refinado
     async function enviar() {
-        const btn = document.querySelector('.btn-submit');
-        const resp = document.getElementById('responsable').value;
+        const btn = document.getElementById('btnGuardar');
+        const resp = document.getElementById('responsable').value.trim();
         const fechaVal = document.getElementById('fechaMain').value;
+        const ubi = document.getElementById('selectUbicacion').value;
+        const area = document.getElementById('selectArea').value;
         
-        if (!resp) { alert("Por favor, indique el responsable"); return; }
-        btn.innerText = "● CONECTANDO...";
+        if (!resp) { alert("Por favor, indique el responsable de la medición."); return; }
+        if (ubi === "" || area === "") return;
 
+        const seccionActual = estructuraUbicaciones[ubi][area];
         const registros = [];
-        document.querySelectorAll('#tablaBody tr').forEach(fila => {
+
+        document.querySelectorAll('.fila-medicion').forEach(fila => {
             const inputTemp = fila.querySelector('input[name="temp"]');
             if (inputTemp && inputTemp.value !== "") { 
                 registros.push({
-                    nombre: fila.cells[0].innerText.trim(),
+                    nombre: fila.querySelector('.item-name').innerText.trim(),
                     temp: inputTemp.value,
                     hum: fila.querySelector('input[name="hum"]')?.value || 0,
-                    obs: fila.querySelector('input[name="obs"]')?.value || ""
+                    obs: fila.querySelector('input[name="obs"]')?.value || "",
+                    categoria: seccionActual.titulo
                 });
             }
         });
 
         if (registros.length === 0) { 
-            alert("No hay datos para enviar"); 
-            btn.innerHTML = "🚀 GUARDAR REGISTRO COMPLETO";
+            alert("No has ingresado ninguna temperatura para guardar."); 
             return; 
         }
 
+        btn.innerText = "● GUARDANDO SECCIÓN...";
+        btn.disabled = true;
+
         try {
-            await fetch("https://script.google.com/macros/s/AKfycbz5vZIRBglYSV6UoMgcKoEAe0Mwh262t_0j7e1Lfou_zHSLp4O4zNHAQsujE9apCDMc5w/exec", 
-            { method: 'POST', mode: 'no-cors', body: JSON.stringify({ responsable: resp, fecha: fechaVal, registros: registros }) });
-            alert("✅ ¡Registro enviado con éxito!");
-            location.reload(); 
+            await fetch(SCRIPT_URL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                body: JSON.stringify({ 
+                    responsable: resp, 
+                    fecha: fechaVal, 
+                    registros: registros 
+                }) 
+            });
+            
+            alert(`✅ ¡Ubicación ${ubi} - Área "${seccionActual.titulo}" registrada con éxito!`);
+            
+            // Guardamos que este par específico ya se completó
+            seccionesRegistradasHoy.add(`${ubi}-${seccionActual.titulo}`);
+            
+            renderizarElementosArea();
+            
+            btn.innerHTML = "🚀 GUARDAR SECCIÓN SELECCIONADA";
+            btn.disabled = false;
         } catch (e) {
-            alert("❌ Error de conexión");
-            btn.innerHTML = "🚀 GUARDAR REGISTRO COMPLETO";
+            alert("❌ Error de conexión al intentar guardar");
+            btn.innerHTML = "🚀 GUARDAR SECCIÓN SELECCIONADA";
+            btn.disabled = false;
         }
     }
+
+    window.onload = inicializarApp;
 </script>
 
 </body>
