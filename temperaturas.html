@@ -239,7 +239,7 @@
             </div>
             <div class="input-group">
                 <label>📅 FECHA DE REGISTRO</label>
-                <input type="date" id="fechaMain">
+                <input type="date" id="fechaMain" onchange="actualizarValidacionFecha()">
             </div>
         </div>
 
@@ -260,7 +260,7 @@
 
         <div class="section-tag">
             <h3>📋 DETALLES DE REGISTRO POR ÁREAS</h3>
-            <span id="badgeCompletado" class="status-badge">✓ GUARDADO</span>
+            <span id="badgeCompletado" class="status-badge">✓ GUARDADO PARA ESTA FECHA</span>
         </div>
 
         <div class="table-container">
@@ -281,22 +281,31 @@
     </div>
 
 <script>
-    // REEMPLAZA: Pega aquí la URL de ejecución de tu Apps Script implementado
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby_PqHBDuEZk69G-cfAJhqaFwToRUhC6EEFjt0-YLvRNWrJSJ534P1-AK39NcYR2_NBJw/exec";
+    // Coloca aquí la URL de ejecución de tu Apps Script implementado
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKmXC8QfH3aclM8NT9jcVrGU7QhLTXxvvGsDlB7g01e4Oyu7pxCzjmB72kWP_haQUH1w/exec";
     
     let estructuraUbicaciones = {}; 
     let seccionesRegistradasHoy = new Set(); 
 
     document.getElementById('fechaMain').valueAsDate = new Date();
 
-    // 1. Carga inicial: Arma el objeto estructurado
+    // 1. Carga inicial: Arma catálogo y busca registros existentes para la fecha seleccionada
     async function inicializarApp() {
         try {
-            const response = await fetch(`${SCRIPT_URL}?action=getCatalogo`);
-            const catalogoCrudo = await response.json();
+            const fechaSeleccionada = document.getElementById('fechaMain').value;
+            
+            // Hacemos el fetch pidiendo el catálogo y los registros hechos en esa fecha
+            const response = await fetch(`${SCRIPT_URL}?action=getCatalogo&fecha=${fechaSeleccionada}`);
+            const dataRespuesta = await response.json();
+            
+            // Desestructuramos la respuesta del backend
+            const catalogoCrudo = dataRespuesta.catalogo;
+            const guardadosCrudos = dataRespuesta.registrados || [];
+            
+            // Sincronizamos el set de registros existentes
+            seccionesRegistradasHoy = new Set(guardadosCrudos);
             
             estructuraUbicaciones = {};
-            
             catalogoCrudo.forEach(item => {
                 const ubi = item.ubicacion; 
                 const area = item.titulo;    
@@ -314,12 +323,18 @@
                 selectUbi.innerHTML += `<option value="${ubi}">${ubi}</option>`;
             });
 
-            document.getElementById('tablaBody').innerHTML = `
-                <tr>
-                    <td style="text-align: center; padding: 40px; color: var(--text-gray); font-style: italic;">
-                        Por favor, elija la ubicación y el área correspondientes arriba para desplegar las celdas.
-                    </td>
-                </tr>`;
+            // Si el usuario ya tenía un área seleccionada, refrescamos la vista para actualizar el badge
+            const areaActual = document.getElementById('selectArea').value;
+            if (areaActual !== "") {
+                renderizarElementosArea();
+            } else {
+                document.getElementById('tablaBody').innerHTML = `
+                    <tr>
+                        <td style="text-align: center; padding: 40px; color: var(--text-gray); font-style: italic;">
+                            Por favor, elija la ubicación y el área correspondientes arriba para desplegar las celdas.
+                        </td>
+                    </tr>`;
+            }
         } catch (error) {
             console.error("Error al inicializar catálogo:", error);
             document.getElementById('tablaBody').innerHTML = `
@@ -329,6 +344,11 @@
                     </td>
                 </tr>`;
         }
+    }
+
+    // Al cambiar la fecha manual en el formulario, revalida contra la base de datos
+    function actualizarValidacionFecha() {
+        inicializarApp();
     }
 
     // 2. Filtrar áreas según la ubicación seleccionada
@@ -359,7 +379,7 @@
         selectArea.disabled = false;
     }
 
-    // 3. Renderizar equipos en la tabla
+    // 3. Renderizar equipos en la tabla y encender el cartel si ya existe en la base de datos
     function renderizarElementosArea() {
         const ubi = document.getElementById('selectUbicacion').value;
         const area = document.getElementById('selectArea').value;
@@ -377,7 +397,8 @@
         const sec = estructuraUbicaciones[ubi][area];
         btn.disabled = false;
         
-        const idIdentificadorUnico = `${ubi}-${sec.titulo}`;
+        // Formato que coincide con la clave construida en Apps Script (Ubicacion_AreaMacro)
+        const idIdentificadorUnico = `${ubi}_${sec.titulo}`;
         if (seccionesRegistradasHoy.has(idIdentificadorUnico)) {
             badge.style.display = "block";
         } else {
@@ -415,7 +436,7 @@
         }
     }
 
-    // 4. Envío de datos corregido con la nueva estructura
+    // 4. Envío de datos
     async function enviar() {
         const btn = document.getElementById('btnGuardar');
         const resp = document.getElementById('responsable').value.trim();
@@ -464,7 +485,8 @@
             
             alert(`✅ ¡Ubicación: ${ubi} | Área: "${seccionActual.titulo}" registrada con éxito!`);
             
-            seccionesRegistradasHoy.add(`${ubi}-${seccionActual.titulo}`);
+            // Agregamos a la memoria local e inmediatamente encendemos el cartel verde
+            seccionesRegistradasHoy.add(`${ubi}_${seccionActual.titulo}`);
             renderizarElementosArea();
             
             btn.innerHTML = "🚀 GUARDAR SECCIÓN SELECCIONADA";
