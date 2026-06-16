@@ -24,7 +24,6 @@
             color: var(--text-dark);
         }
 
-        /* Contenedor principal: Envuelve logo, título y formularios */
         .main-wrapper {
             background: white;
             max-width: 950px;
@@ -36,7 +35,6 @@
             padding: 30px;
         }
 
-        /* Encabezado interno estilo Merma */
         .internal-header {
             display: flex;
             align-items: center;
@@ -63,7 +61,6 @@
             font-size: 0.9rem;
         }
 
-        /* Recuadro de Info adaptado para la nueva distribución */
         .info-grid {
             background: var(--pink-bg);
             border: 1px solid var(--border-light);
@@ -75,7 +72,6 @@
             margin-bottom: 20px;
         }
 
-        /* Fila secundaria exclusiva para los filtros en cascada */
         .filter-grid {
             background: #fff;
             border: 1px solid #e5e7eb;
@@ -285,26 +281,25 @@
     </div>
 
 <script>
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxpIFu6gSkt6bn7LhbX5jJdFgJNOF_1cfjZgt5oE1x91vHRy7KggXOJPlrFQEdAOuVPjQ/exec";
+    // REEMPLAZA: Pega aquí la URL de ejecución de tu Apps Script implementado
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby_PqHBDuEZk69G-cfAJhqaFwToRUhC6EEFjt0-YLvRNWrJSJ534P1-AK39NcYR2_NBJw/exec";
     
-    // Aquí guardaremos la estructura completa indexada por Ubicación -> Área
     let estructuraUbicaciones = {}; 
     let seccionesRegistradasHoy = new Set(); 
 
     document.getElementById('fechaMain').valueAsDate = new Date();
 
-    // 1. Carga inicial: Lee el Sheets y arma el árbol de dependencias de ubicaciones
+    // 1. Carga inicial: Arma el objeto estructurado
     async function inicializarApp() {
         try {
             const response = await fetch(`${SCRIPT_URL}?action=getCatalogo`);
             const catalogoCrudo = await response.json();
             
-            // Procesamos la respuesta para agruparla jerárquicamente por Ubicación
             estructuraUbicaciones = {};
             
             catalogoCrudo.forEach(item => {
-                const ubi = item.ubicacion; // "Sótano", "Piso 1", etc.
-                const area = item.titulo;    // "Almacén", "Hojaldre", etc.
+                const ubi = item.ubicacion; 
+                const area = item.titulo;    
                 
                 if (!estructuraUbicaciones[ubi]) {
                     estructuraUbicaciones[ubi] = {};
@@ -312,7 +307,6 @@
                 estructuraUbicaciones[ubi][area] = item;
             });
 
-            // Rellenamos el primer selector (Ubicaciones únicas)
             const selectUbi = document.getElementById('selectUbicacion');
             selectUbi.innerHTML = '<option value="">-- Elige Planta/Nivel --</option>';
             
@@ -337,7 +331,7 @@
         }
     }
 
-    // 2. Paso intermedio: Al cambiar ubicación, desbloquea y filtra las áreas de ese nivel
+    // 2. Filtrar áreas según la ubicación seleccionada
     function filtrarAreasPorUbicacion() {
         const ubiSeleccionada = document.getElementById('selectUbicacion').value;
         const selectArea = document.getElementById('selectArea');
@@ -345,7 +339,7 @@
         const btn = document.getElementById('btnGuardar');
         const badge = document.getElementById('badgeCompletado');
 
-        tbody.innerHTML = `<tr><td style="text-align: center; padding: 40px; color: var(--text-gray);">Seleccione el área específica en la parte superior.</td></tr>`;
+        tbody.innerHTML = `<tr><td style="text-align: center; padding: 40px; color: var(--text-gray); font-style: italic;">Seleccione el área específica en la parte superior.</td></tr>`;
         btn.disabled = true;
         badge.style.display = "none";
 
@@ -355,7 +349,6 @@
             return;
         }
 
-        // Extraemos las áreas asociadas únicamente a esa ubicación
         const areasDisponibles = estructuraUbicaciones[ubiSeleccionada];
         
         selectArea.innerHTML = '<option value="">-- Seleccione Área --</option>';
@@ -366,7 +359,7 @@
         selectArea.disabled = false;
     }
 
-    // 3. Renderizado final de los equipos/celdas del área escogida
+    // 3. Renderizar equipos en la tabla
     function renderizarElementosArea() {
         const ubi = document.getElementById('selectUbicacion').value;
         const area = document.getElementById('selectArea').value;
@@ -375,7 +368,7 @@
         const badge = document.getElementById('badgeCompletado');
 
         if (area === "") {
-            tbody.innerHTML = `<tr><td style="text-align: center; padding: 40px; color: var(--text-gray);">Seleccione el área específica en la parte superior.</td></tr>`;
+            tbody.innerHTML = `<tr><td style="text-align: center; padding: 40px; color: var(--text-gray); font-style: italic;">Seleccione el área específica en la parte superior.</td></tr>`;
             btn.disabled = true;
             badge.style.display = "none";
             return;
@@ -384,7 +377,6 @@
         const sec = estructuraUbicaciones[ubi][area];
         btn.disabled = false;
         
-        // Comprobar si ya se guardó este sector concreto hoy
         const idIdentificadorUnico = `${ubi}-${sec.titulo}`;
         if (seccionesRegistradasHoy.has(idIdentificadorUnico)) {
             badge.style.display = "block";
@@ -392,7 +384,7 @@
             badge.style.display = "none";
         }
 
-        let html = `<tr><td colspan="4" class="category-row">${ubi} > ${sec.titulo} (Máx: ${sec.limite}°C)</td></tr>`;
+        let html = `<tr><td colspan="4" class="category-row">${ubi} &gt; ${sec.titulo} (Máx: ${sec.limite}°C)</td></tr>`;
         
         sec.items.forEach(nombre => {
             const humField = sec.hasHum ? 
@@ -423,7 +415,7 @@
         }
     }
 
-    // 4. Envío parcial refinado
+    // 4. Envío de datos corregido con la nueva estructura
     async function enviar() {
         const btn = document.getElementById('btnGuardar');
         const resp = document.getElementById('responsable').value.trim();
@@ -445,7 +437,7 @@
                     temp: inputTemp.value,
                     hum: fila.querySelector('input[name="hum"]')?.value || 0,
                     obs: fila.querySelector('input[name="obs"]')?.value || "",
-                    categoria: seccionActual.titulo
+                    categoria: seccionActual.titulo 
                 });
             }
         });
@@ -465,15 +457,14 @@
                 body: JSON.stringify({ 
                     responsable: resp, 
                     fecha: fechaVal, 
+                    ubicacion: ubi,
                     registros: registros 
                 }) 
             });
             
-            alert(`✅ ¡Ubicación ${ubi} - Área "${seccionActual.titulo}" registrada con éxito!`);
+            alert(`✅ ¡Ubicación: ${ubi} | Área: "${seccionActual.titulo}" registrada con éxito!`);
             
-            // Guardamos que este par específico ya se completó
             seccionesRegistradasHoy.add(`${ubi}-${seccionActual.titulo}`);
-            
             renderizarElementosArea();
             
             btn.innerHTML = "🚀 GUARDAR SECCIÓN SELECCIONADA";
