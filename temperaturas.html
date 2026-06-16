@@ -135,12 +135,14 @@
         .table-container {
             border: 1px solid #e5e7eb;
             border-radius: 10px;
-            overflow: hidden;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
         }
 
         table {
             width: 100%;
             border-collapse: collapse;
+            min-width: 650px; /* Evita que las columnas colapsen en pantallas chicas */
         }
 
         .category-row {
@@ -408,14 +410,15 @@
         let html = `<tr><td colspan="4" class="category-row">${ubi} &gt; ${sec.titulo} (Máx: ${sec.limite}°C)</td></tr>`;
         
         sec.items.forEach(nombre => {
+            // El input de humedad también hereda el conversor de comas por si acaso
             const humField = sec.hasHum ? 
-                `<input type="number" name="hum" step="0.1" class="input-table" placeholder="Hum %">` : 
+                `<input type="text" inputmode="decimal" name="hum" class="input-table" placeholder="Hum %" oninput="this.value = this.value.replace(/,/g, '.')">` : 
                 `<input type="number" value="0" readonly style="background:#f1f5f9; border:none; color:#cbd5e1" class="input-table">`;
             
             html += `
                 <tr class="fila-medicion">
                     <td class="item-name">${nombre}</td>
-                    <td style="width: 15%"><input type="number" name="temp" step="0.1" class="input-table" placeholder="°C" onchange="validarTemp(this, ${sec.limite})"></td>
+                    <td style="width: 15%"><input type="text" inputmode="decimal" name="temp" class="input-table" placeholder="°C" oninput="this.value = this.value.replace(/,/g, '.')" onchange="validarTemp(this, ${sec.limite})"></td>
                     <td style="width: 15%">${humField}</td>
                     <td class="td-obs"><input type="text" name="obs" class="input-table input-obs" placeholder="Observación"></td>
                 </tr>`;
@@ -452,11 +455,11 @@
 
         document.querySelectorAll('.fila-medicion').forEach(fila => {
             const inputTemp = fila.querySelector('input[name="temp"]');
-            if (inputTemp && inputTemp.value !== "") { 
+            if (inputTemp && inputTemp.value.trim() !== "") { 
                 registros.push({
                     nombre: fila.querySelector('.item-name').innerText.trim(),
-                    temp: inputTemp.value,
-                    hum: fila.querySelector('input[name="hum"]')?.value || 0,
+                    temp: inputTemp.value.trim(),
+                    hum: fila.querySelector('input[name="hum"]')?.value.trim() || 0,
                     obs: fila.querySelector('input[name="obs"]')?.value || "",
                     categoria: seccionActual.titulo 
                 });
