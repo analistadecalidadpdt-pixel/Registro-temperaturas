@@ -276,10 +276,7 @@
             <div class="input-group">
                 <label>📍 SELECCIONE EL ÁREA</label>
                 <select id="selectArea" onchange="filtrarPorArea()">
-                    <option value="">Seleccione un área...</option>
-                    <option value="Produccion">Producción</option>
-                    <option value="Empaquetado">Empaquetado</option>
-                    <option value="Producto Fresco">Producto Fresco</option>
+                <option value="">Cargando áreas desde Sheets...</option>
                 </select>
             </div>
             <div class="input-group">
@@ -331,18 +328,26 @@
             const response = await fetch(`${SCRIPT_URL}?action=getTrabajadores`);
             baseTrabajadores = await response.json();
             
+            // --- NUEVA LÓGICA DE ACTUALIZACIÓN DINÁMICA ---
+            // Extrae las áreas de los trabajadores sin repetir ninguna
+            const areasUnicas = [...new Set(baseTrabajadores.map(t => t.area))].sort();
+            
+            const selectArea = document.getElementById('selectArea');
+            selectArea.innerHTML = '<option value="">-- Seleccione un Área --</option>';
+            
+            areasUnicas.forEach(area => {
+                if(area) { // Evita registrar celdas vacías del Sheets
+                    selectArea.innerHTML += `<option value="${area}">${area}</option>`;
+                }
+            });
+            // ----------------------------------------------
+            
             document.getElementById('tablaBpmBody').innerHTML = `
                 <tr>
                     <td colspan="13" class="area-vacia">Seleccione un área en la parte superior para desplegar la lista de personal.</td>
                 </tr>`;
         } catch (error) {
-            console.error("Error al conectar con la base de datos de Google Sheets:", error);
-            document.getElementById('tablaBpmBody').innerHTML = `
-                <tr>
-                    <td colspan="13" class="area-vacia" style="color: #ef4444;">
-                        ⚠️ No se pudo conectar con Google Sheets. Verifica que la URL del script sea correcta.
-                    </td>
-                </tr>`;
+            // ... control de errores
         }
     }
 
