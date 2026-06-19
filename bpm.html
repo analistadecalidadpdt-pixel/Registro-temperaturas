@@ -352,63 +352,98 @@
     }
 
     // 2. Renderizado dinámico y optimizado con división de nombres y control de asistencia
-    function filtrarPorArea() {
-        const areaSeleccionada = document.getElementById('selectArea').value;
-        const tbody = document.getElementById('tablaBpmBody');
-        
-        if (!areaSeleccionada) {
-            tbody.innerHTML = '<tr><td colspan="13" class="area-vacia">Seleccione un área en la parte superior para desplegar la lista de personal.</td></tr>';
-            return;
+   // Modificamos la función para que sea asíncrona (async) y pueda consultar a Google Sheets en tiempo real
+async function filtrarPorArea() {
+    const areaSeleccionada = document.getElementById('selectArea').value;
+    const fechaSeleccionada = document.getElementById('fechaBpm').value;
+    const tbody = document.getElementById('tablaBpmBody');
+    const btnSubmit = document.querySelector('.btn-submit');
+    
+    if (!areaSeleccionada) {
+        tbody.innerHTML = '<tr><td colspan="13" class="area-vacia">Seleccione un área en la parte superior para desplegar la lista de personal.</td></tr>';
+        btnSubmit.disabled = false;
+        btnSubmit.innerText = "🚀 GUARDAR AUDITORÍA DEL ÁREA";
+        return;
+    }
+
+    // --- NUEVA LÓGICA DE VERIFICACIÓN DE DUPLICADOS ---
+    tbody.innerHTML = '<tr><td colspan="13" class="area-vacia">🔍 Verificando si ya se realizó una auditoría hoy para esta área...</td></tr>';
+    btnSubmit.disabled = true;
+
+    try {
+        const checkResponse = await fetch(`${SCRIPT_URL}?action=verificarDuplicado&area=${encodeURIComponent(areaSeleccionada)}&fecha=${fechaSeleccionada}`);
+        const checkResult = await checkResponse.json();
+
+        if (checkResult.duplicado) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="13" class="area-vacia" style="color: #dc2626; font-weight: bold; background-color: #fef2f2; padding: 30px; border: 1px dashed #fecaca; border-radius: 8px;">
+                        ⚠️ ATENCIÓN: El área "${areaSeleccionada}" YA FUE EVALUADA el día de hoy por: ${checkResult.responsable || "Otro evaluador"}.<br>
+                        <span style="font-weight: normal; font-size: 0.85rem; color: #71717a;">No es necesario volver a registrar los datos para evitar duplicados.</span>
+                    </td>
+                </tr>`;
+            btnSubmit.innerText = "❌ ÁREA YA EVALUADA HOY";
+            btnSubmit.style.background = "#9ca3af";
+            btnSubmit.style.boxShadow = "none";
+            return; // Detiene el flujo, no carga los trabajadores para evitar que fuercen el envío
         }
+    } catch (error) {
+        console.error("Error al verificar duplicados:", error);
+        // Si falla la verificación, por seguridad dejamos que continúe pero avisamos en consola
+    }
 
-        const filtrados = baseTrabajadores.filter(t => t.area === areaSeleccionada);
+    // Restauramos el estilo original del botón si el área está libre
+    btnSubmit.disabled = false;
+    btnSubmit.innerText = "🚀 GUARDAR AUDITORÍA DEL ÁREA";
+    btnSubmit.style.background = "var(--accent-color)";
+    btnSubmit.style.boxShadow = "0 4px 12px rgba(192, 22, 60, 0.2)";
 
-        if (filtrados.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="13" class="area-vacia">No se encontraron trabajadores asignados a esta área en el Sheets.</td></tr>';
-            return;
-        }
+    // --- CONTINÚA TU LÓGICA ORIGINAL DE RENDERIZAR TRABAJADORES ---
+    const filtrados = baseTrabajadores.filter(t => t.area === areaSeleccionada);
 
-        tbody.innerHTML = "";
-        
-      filtrados.forEach((trabajador, index) => {
-            let filaHTML = `
-            <tr class="fila-trabajador" id="fila-bpm-${index}" data-nombre="${trabajador.nombre}">
-                <td class="col-asistencia">
-                    <select class="select-asistencia status-asistente" onchange="controlarAsistenciaFila(${index}, this)">
-                        <option value="presente" selected>Asistente</option>
-                        <option value="ausente">Inasistente</option>
-                    </select>
-                </td>
-                <td class="col-nombre">
-                    <span class="worker-name"> ${trabajador.nombre.trim()}</span>
-                </td>`;
+    if (filtrados.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="13" class="area-vacia">No se encontraron trabajadores asignados a esta área en el Sheets.</td></tr>';
+        return;
+    }
 
-            criterios.forEach(crit => {
-                // 1. Evaluamos la regla: ¿Es el área de Producción y el criterio de guantes?
-                const esProduccionSinGuantes = (areaSeleccionada.toLowerCase().includes('produccion') || areaSeleccionada.toLowerCase().includes('producción')) && crit === 'guantes';
-                
-                // 2. Si cumple la regla, la clase inicial es 'val-na' (gris), si no, tu clase estándar 'val-c' (verde)
-                const claseDinamica = esProduccionSinGuantes ? 'select-status val-na' : 'select-status val-c';
+    tbody.innerHTML = "";
+    
+    filtrados.forEach((trabajador, index) => {
+        let filaHTML = `
+        <tr class="fila-trabajador" id="fila-bpm-${index}" data-nombre="${trabajador.nombre}">
+            <td class="col-asistencia">
+                <select class="select-asistencia status-asistente" onchange="controlarAsistenciaFila(${index}, this)">
+                    <option value="presente" selected>Asistente</option>
+                    <option value="ausente">Inasistente</option>
+                </select>
+            </td>
+            <td class="col-nombre">
+                <span class="worker-name"> ${trabajador.nombre.trim()}</span>
+            </td>`;
 
-                filaHTML += `
-                    <td class="col-crit">
-                        <select data-crit="${crit}" class="${claseDinamica}" onchange="cambiarColorSelect(this)">
-                            <option value="Cumple" ${!esProduccionSinGuantes ? 'selected' : ''}>C</option>
-                            <option value="No Cumple">N</option>
-                            <option value="N/A" ${esProduccionSinGuantes ? 'selected' : ''}>N/A</option>
-                        </select>
-                    </td>`;
-            });
+        criterios.forEach(crit => {
+            const esProduccionSinGuantes = (areaSeleccionada.toLowerCase().includes('produccion') || areaSeleccionada.toLowerCase().includes('producción')) && crit === 'guantes';
+            const claseDinamica = esProduccionSinGuantes ? 'select-status val-na' : 'select-status val-c';
 
             filaHTML += `
-                <td class="col-obs">
-                    <input type="text" class="input-obs" data-obs="nota" placeholder="Nota de la fila...">
-                </td>
-            </tr>`;
-            
-            tbody.innerHTML += filaHTML;
+                <td class="col-crit">
+                    <select data-crit="${crit}" class="${claseDinamica}" onchange="cambiarColorSelect(this)">
+                        <option value="Cumple" ${!esProduccionSinGuantes ? 'selected' : ''}>C</option>
+                        <option value="No Cumple">N</option>
+                        <option value="N/A" ${esProduccionSinGuantes ? 'selected' : ''}>N/A</option>
+                    </select>
+                </td>`;
         });
-    }
+
+        filaHTML += `
+            <td class="col-obs">
+                <input type="text" class="input-obs" data-obs="nota" placeholder="Nota de la fila...">
+            </td>
+        </tr>`;
+        
+        tbody.innerHTML += filaHTML;
+    });
+}
 
     // Maneja los estilos de color compactos según la opción seleccionada
     function cambiarColorSelect(select) {
@@ -450,58 +485,72 @@
     }
 
     async function enviarEvaluacionMasiva() {
-        const responsable = document.getElementById('responsableEval').value.trim();
-        const area = document.getElementById('selectArea').value;
-        const fecha = document.getElementById('fechaBpm').value;
-        const filas = document.querySelectorAll('.fila-trabajador');
-        const btn = document.querySelector('.btn-submit');
+    const responsable = document.getElementById('responsableEval').value.trim();
+    const area = document.getElementById('selectArea').value;
+    const fecha = document.getElementById('fechaBpm').value;
+    const filas = document.querySelectorAll('.fila-trabajador');
+    const btn = document.querySelector('.btn-submit');
 
-        if (!responsable) { alert("Por favor, ingresa el nombre del Responsable de la Evaluación."); return; }
-        if (!area) { alert("Por favor, selecciona un área."); return; }
-        if (filas.length === 0) { alert("No hay filas de personal cargadas para evaluar."); return; }
+    if (!responsable) { alert("Por favor, ingresa el nombre del Responsable de la Evaluación."); return; }
+    if (!area) { alert("Por favor, selecciona un área."); return; }
+    if (filas.length === 0) { alert("No hay filas de personal cargadas para evaluar."); return; }
 
-        btn.innerText = "● REGISTRANDO FILAS EN SHEETS...";
-        btn.disabled = true;
+    btn.innerText = "● REGISTRANDO FILAS EN SHEETS...";
+    btn.disabled = true;
 
-        const registros = Array.from(filas).map(fila => {
-            return {
-                fecha: fecha,
-                area: area,
-                asistencia: fila.querySelector('.select-asistencia').value,
-                trabajador: fila.getAttribute('data-nombre'),
-                gorro: fila.querySelector('[data-crit="gorro"]').value,
-                uniforme: fila.querySelector('[data-crit="uniforme"]').value,
-                tapabocas: fila.querySelector('[data-crit="tapabocas"]').value,
-                unas: fila.querySelector('[data-crit="unas"]').value,
-                rostro: fila.querySelector('[data-crit="rostro"]').value,
-                guantes: fila.querySelector('[data-crit="guantes"]').value,
-                lmanos: fila.querySelector('[data-crit="lmanos"]').value,
-                prendas: fila.querySelector('[data-crit="prendas"]').value,
-                botas: fila.querySelector('[data-crit="botas"]').value,
-                telefono: fila.querySelector('[data-crit="telefono"]').value,
-                observaciones: fila.querySelector('[data-obs="nota"]').value,
-                responsable: responsable
-            };
+    const registros = Array.from(filas).map(fila => {
+        return {
+            fecha: fecha,
+            area: area,
+            asistencia: fila.querySelector('.select-asistencia').value,
+            trabajador: fila.getAttribute('data-nombre'),
+            gorro: fila.querySelector('[data-crit="gorro"]').value,
+            uniforme: fila.querySelector('[data-crit="uniforme"]').value,
+            tapabocas: fila.querySelector('[data-crit="tapabocas"]').value,
+            unas: fila.querySelector('[data-crit="unas"]').value,
+            rostro: fila.querySelector('[data-crit="rostro"]').value,
+            guantes: fila.querySelector('[data-crit="guantes"]').value,
+            lmanos: fila.querySelector('[data-crit="lmanos"]').value,
+            prendas: fila.querySelector('[data-crit="prendas"]').value,
+            botas: fila.querySelector('[data-crit="botas"]').value,
+            telefono: fila.querySelector('[data-crit="telefono"]').value,
+            observaciones: fila.querySelector('[data-obs="nota"]').value,
+            responsable: responsable
+        };
+    });
+
+    try {
+        // CORRECCIÓN CORS: Enviamos los datos usando URLSearchParams para máxima compatibilidad
+        const formBody = new URLSearchParams();
+        formBody.append('action', 'addAuditoriaMasiva');
+        formBody.append('datos', JSON.stringify(registros));
+
+        const response = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            mode: 'cors', // Asegura el modo CORS explícitamente
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
+            },
+            body: formBody
         });
-
-        try {
-            // CORRECCIÓN AQUÍ: Quitamos no-cors y agregamos headers correctos
-            const response = await fetch(SCRIPT_URL, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'text/plain;charset=utf-8'
-                },
-                body: JSON.stringify({ action: "addAuditoriaMasiva", datos: registros })
-            });
-            
-            alert(`✅ ¡Éxito! Se subieron las líneas de evaluación de los ${registros.length} trabajadores.`);
+        
+        const resultado = await response.json();
+        
+        if (resultado.status === "SUCCESS") {
+            alert(`✅ ¡Éxito! Se subieron las líneas de evaluación de los ${resultado.rows} trabajadores.`);
             location.reload();
-        } catch (e) {
-            alert("❌ Error al intentar sincronizar con el archivo Excel.");
+        } else {
+            alert("❌ El servidor devolvió un error: " + resultado.message);
             btn.innerText = "🚀 GUARDAR AUDITORÍA DEL ÁREA";
             btn.disabled = false;
         }
+    } catch (e) {
+        console.error(e);
+        alert("❌ Error al intentar sincronizar con el archivo Excel. Revisa la consola.");
+        btn.innerText = "🚀 GUARDAR AUDITORÍA DEL ÁREA";
+        btn.disabled = false;
     }
+}
 
     obtenerTrabajadoresDesdeSheets();
 </script>
