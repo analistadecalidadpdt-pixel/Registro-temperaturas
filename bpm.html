@@ -320,6 +320,8 @@
 <script>
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzOQ9aKqRG6XIxnWJv06Q6h3USoOqJMSwS33yz5UqoTWQ6EqiIL6mQK5xoXCdKEwt0tjg/exec";
     const criterios = ["gorro", "uniforme", "tapabocas", "unas", "rostro", "guantes", "lmanos", "prendas", "botas", "telefono"];
+    
+    let baseTrabajadores = [];
 
     document.getElementById('fechaBpm').valueAsDate = new Date();
 
@@ -495,7 +497,7 @@ async function filtrarPorArea() {
     if (!area) { alert("Por favor, selecciona un área."); return; }
     if (filas.length === 0) { alert("No hay filas de personal cargadas para evaluar."); return; }
 
-    btn.innerText = "● REGISTRANDO FILAS EN SHEETS...";
+    btn.innerText = "● GUARDANDO EN HOJA DE CÁLCULO...";
     btn.disabled = true;
 
     const registros = Array.from(filas).map(fila => {
@@ -519,34 +521,44 @@ async function filtrarPorArea() {
         };
     });
 
-    try {
-        // CORRECCIÓN CORS: Enviamos los datos usando URLSearchParams para máxima compatibilidad
-        const formBody = new URLSearchParams();
-        formBody.append('action', 'addAuditoriaMasiva');
-        formBody.append('datos', JSON.stringify(registros));
+    // Formateamos los datos como un formulario clásico (el método más compatible con Apps Script)
+    const formBody = new URLSearchParams();
+    formBody.append('action', 'addAuditoriaMasiva');
+    formBody.append('datos', JSON.stringify(registros));
 
+    try {
+        // Hacemos la petición esperando una respuesta obligatoria (mode: 'cors')
         const response = await fetch(SCRIPT_URL, {
             method: 'POST',
-            mode: 'cors', // Asegura el modo CORS explícitamente
+            mode: 'cors',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8'
             },
             body: formBody
         });
         
+        // Verificamos si la respuesta de red fue correcta (Status 200)
+        if (!response.ok) {
+            throw new Error(`Error de red del servidor (Código ${response.status})`);
+        }
+
         const resultado = await response.json();
         
         if (resultado.status === "SUCCESS") {
-            alert(`✅ ¡Éxito! Se subieron las líneas de evaluación de los ${resultado.rows} trabajadores.`);
+            // MENSAJE REAL DE ÉXITO: Confirmado por la base de datos
+            alert(`✅ ¡Guardado Confirmado!\nSe registraron exitosamente las evaluaciones de los ${resultado.rows} trabajadores en la hoja 'Auditorias_BPM'.`);
             location.reload();
         } else {
-            alert("❌ El servidor devolvió un error: " + resultado.message);
+            // MENSAJE REAL DE ERROR devuelto por el propio Google Sheets
+            alert("❌ Error en la Base de Datos: " + resultado.message);
             btn.innerText = "🚀 GUARDAR AUDITORÍA DEL ÁREA";
             btn.disabled = false;
         }
+
     } catch (e) {
-        console.error(e);
-        alert("❌ Error al intentar sincronizar con el archivo Excel. Revisa la consola.");
+        // MENSAJE REAL DE FALLO DE CONEXIÓN (CORS o Red bloqueada)
+        console.error("Error detallado:", e);
+        alert(`❌ Error Real de Conexión:\nLa información NO pudo ser guardada. El navegador bloqueó el envío o la URL del script es incorrecta.\n\nDetalle: ${e.message}`);
         btn.innerText = "🚀 GUARDAR AUDITORÍA DEL ÁREA";
         btn.disabled = false;
     }
