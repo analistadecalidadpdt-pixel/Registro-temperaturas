@@ -1,0 +1,286 @@
+/* --- PALETA DE COLORES Y VARIABLES CORPORATIVAS --- */
+:root {
+  --bg-principal: #f4f5f7;
+  --blanco: #ffffff;
+  --negro: #1a1a1a;
+  --gris-oscuro: #333333;
+  --gris-medio: #888888;
+  --gris-claro: #e1e3e6;
+  --color-conforme: #2e7d32; /* Verde Calidad */
+  --color-nc: #c62828;       /* Rojo Alerta */
+  --color-na: #616161;       /* Gris Neutro */
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+  background-color: var(--bg-principal);
+  color: var(--negro);
+  padding-top: 70px; /* Espacio para el header fijo */
+}
+
+/* --- HEADER FIJO EN LA PARTE SUPERIOR --- */
+.app-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 65px;
+  background-color: var(--negro);
+  color: var(--blanco);
+  display: flex;
+  align-items: center;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  z-index: 100;
+}
+
+.header-container {
+  width: 100%;
+  padding: 0 20px;
+}
+
+.app-header h1 {
+  font-size: 1.2rem;
+  letter-spacing: 1px;
+}
+
+.app-header small {
+  color: var(--gris-claro);
+  font-size: 0.8rem;
+}
+
+/* --- AJUSTES PARA EL LOGO EN EL HEADER --- */
+.header-flex {
+  display: flex;
+  align-items: center;
+  gap: 12px; /* Espacio entre el logo y el texto */
+}
+
+.app-logo {
+  height: 45px; /* Altura perfecta para que no desborde el encabezado */
+  width: auto;  /* Mantiene la proporción original de la imagen */
+  object-fit: contain;
+  border-radius: 4px; /* Opcional: suaviza los bordes si tu logo es cuadrado */
+}
+
+.header-text {
+  display: flex;
+  flex-direction: column;
+}
+
+/* --- CONTENEDORES Y ESTRUCTURAS --- */
+.app-container {
+  padding: 15px;
+  max-width: 500px; /* Optimizado al ancho estándar de pantallas móviles */
+  margin: 0 auto;
+}
+
+.card {
+  background: var(--blanco);
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+}
+
+.hidden { display: none !important; }
+.text-center { text-align: center; }
+
+/* --- COMPONENTES DE FORMULARIO (PANTALLA 1) --- */
+.form-group {
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 6px;
+  color: var(--gris-oscuro);
+}
+
+.form-group label i { margin-right: 5px; }
+
+.form-group input[type="text"],
+.form-group input[type="date"],
+.form-group select {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--gris-claro);
+  border-radius: 8px;
+  font-size: 1rem;
+  background-color: #fafafa;
+}
+
+/* Selector SÍ/NO de Producción */
+.radio-toggle {
+  display: flex;
+  border: 1px solid var(--gris-claro);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.radio-toggle input[type="radio"] { display: none; }
+
+.radio-toggle label {
+  flex: 1;
+  text-align: center;
+  padding: 12px 0;
+  margin-bottom: 0;
+  background-color: var(--blanco);
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.radio-toggle input[type="radio"]:checked + label {
+  background-color: var(--negro);
+  color: var(--blanco);
+}
+
+/* --- BARRA FLOTANTE DE INDICADORES (PANTALLA 2) --- */
+.sticky-calc {
+  position: sticky;
+  top: 65px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(5px);
+  z-index: 90;
+  margin: -15px -15px 15px -15px;
+  padding: 10px 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--gris-claro);
+}
+
+.calc-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.calc-box .label { font-size: 0.75rem; text-transform: uppercase; color: var(--gris-medio); font-weight: bold; }
+.calc-box .value { font-size: 1.6rem; font-weight: 800; color: var(--negro); }
+
+.area-badge {
+  background-color: var(--gris-claro);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* --- BLOQUES DE PREGUNTAS MÓVILES --- */
+.categoria-titulo {
+  font-size: 1rem;
+  text-transform: uppercase;
+  color: var(--negro);
+  border-bottom: 2px solid var(--negro);
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+}
+
+.pregunta-item {
+  padding: 15px 0;
+  border-bottom: 1px dashed var(--gris-claro);
+}
+
+.pregunta-item:last-child { border-bottom: none; }
+.pregunta-texto { font-size: 0.95rem; line-height: 1.4; margin-bottom: 12px; }
+
+/* Botones Táctiles Grandes C / NC / N/A */
+.btn-group-eval {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.btn-eval {
+  flex: 1;
+  border: 2px solid var(--gris-claro);
+  background-color: var(--blanco);
+  padding: 12px 0;
+  font-size: 1rem;
+  font-weight: 700;
+  border-radius: 8px;
+  color: var(--gris-medio);
+  transition: all 0.2s ease;
+}
+
+.btn-eval.c.active { background-color: var(--color-conforme); border-color: var(--color-conforme); color: var(--blanco); }
+.btn-eval.nc.active { background-color: var(--color-nc); border-color: var(--color-nc); color: var(--blanco); }
+.btn-eval.na.active { background-color: var(--color-na); border-color: var(--color-na); color: var(--blanco); }
+
+/* Áreas de Observación condicionales */
+.obs-container textarea {
+  width: 100%;
+  height: 70px;
+  padding: 10px;
+  border: 1px solid var(--color-nc);
+  background-color: #fff8f8;
+  border-radius: 6px;
+  resize: none;
+  font-size: 0.9rem;
+  margin-top: 8px;
+}
+
+/* --- BOTONES DE ACCIÓN GENERALES --- */
+button.btn-primary, button.btn-success, button.btn-secondary {
+  width: 100%;
+  padding: 15px;
+  border: none;
+  border-radius: 8px;
+  font-size: 1.05rem;
+  font-weight: bold;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+}
+
+button.btn-primary { background-color: var(--negro); color: var(--blanco); }
+button.btn-primary:disabled { background-color: var(--gris-medio); opacity: 0.5; }
+button.btn-success { background-color: var(--color-conforme); color: var(--blanco); margin-top: 10px; }
+button.btn-secondary { background-color: var(--gris-claro); color: var(--negro); margin-top: 15px; }
+
+/* --- PANTALLA DE CARGA GLOBAL --- */
+#loading-overlay {
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(255,255,255,0.85);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 200;
+}
+
+.spinner {
+  width: 40px; height: 40px;
+  border: 4px solid var(--gris-claro);
+  border-top: 4px solid var(--negro);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+.fade-in { animation: fadeIn 0.3s ease-in-out; }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* --- PANTALLA DE ÉXITO --- */
+.success-icon { font-size: 4rem; color: var(--color-conforme); margin-bottom: 10px; }
+.id-badge {
+  display: inline-block;
+  background-color: var(--negro);
+  color: var(--blanco);
+  padding: 6px 15px;
+  border-radius: 6px;
+  font-weight: bold;
+  font-size: 1.1rem;
+  margin: 15px 0;
+}
