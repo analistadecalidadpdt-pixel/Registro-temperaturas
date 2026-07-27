@@ -416,12 +416,12 @@
                 `<input type="number" value="0" readonly style="background:#f1f5f9; border:none; color:#cbd5e1" class="input-table">`;
             
             // Campo de Temperatura (Permite el signo menos '-' al inicio)
-     html += `
-     <tr class="fila-medicion">
+     // Campo de Temperatura con compatibilidad extendida para Samsung
+   html += `
+    <tr class="fila-medicion">
         <td class="item-name">${nombre}</td>
         <td style="width: 15%">
-            <input type="text" 
-                   inputmode="decimal" 
+            <input type="tel" 
                    name="temp" 
                    class="input-table" 
                    placeholder="°C" 
@@ -430,7 +430,7 @@
         </td>
         <td style="width: 15%">${humField}</td>
         <td class="td-obs"><input type="text" name="obs" class="input-table input-obs" placeholder="Observación"></td>
-     </tr>`;
+    </tr>`;
         });
 
         tbody.innerHTML = html;
