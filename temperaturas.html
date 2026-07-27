@@ -415,13 +415,22 @@
                 `<input type="text" inputmode="decimal" name="hum" class="input-table" placeholder="Hum %" oninput="this.value = this.value.replace(/,/g, '.')">` : 
                 `<input type="number" value="0" readonly style="background:#f1f5f9; border:none; color:#cbd5e1" class="input-table">`;
             
-            html += `
-                <tr class="fila-medicion">
-                    <td class="item-name">${nombre}</td>
-                    <td style="width: 15%"><input type="text" inputmode="decimal" name="temp" class="input-table" placeholder="°C" oninput="this.value = this.value.replace(/,/g, '.')" onchange="validarTemp(this, ${sec.limite})"></td>
-                    <td style="width: 15%">${humField}</td>
-                    <td class="td-obs"><input type="text" name="obs" class="input-table input-obs" placeholder="Observación"></td>
-                </tr>`;
+            // Campo de Temperatura (Permite el signo menos '-' al inicio)
+     html += `
+     <tr class="fila-medicion">
+        <td class="item-name">${nombre}</td>
+        <td style="width: 15%">
+            <input type="text" 
+                   inputmode="decimal" 
+                   name="temp" 
+                   class="input-table" 
+                   placeholder="°C" 
+                   oninput="this.value = this.value.replace(/,/g, '.').replace(/(?!^-)[^0-9.]/g, '')" 
+                   onchange="validarTemp(this, ${sec.limite})">
+        </td>
+        <td style="width: 15%">${humField}</td>
+        <td class="td-obs"><input type="text" name="obs" class="input-table input-obs" placeholder="Observación"></td>
+     </tr>`;
         });
 
         tbody.innerHTML = html;
