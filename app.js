@@ -1,7 +1,7 @@
 // =================================================================
 // CONFIGURACIÓN: Pega aquí la URL de tu implementación de Apps Script
 // =================================================================
-const BASE_URL = "https://script.googleusercontent.com/macros/echo?user_content_key=AUkAhnS5ydNIBa378kGHadBvMJQGkX4tpo3HDnsLfruJVkjMMW2CFl4K2dMgcfFZm3KfNpwPDzQD1SzVM7u91H4t2V3SorWBrVJQDsrT6LGpzE6LBKW_tgGzbXOoS0r6MvcLgW0lVM8ijhqBTw387y-QFyw5Ks9Xce6__YHIWQWx2bdvcLMexA_0c7YEC2qXAGZndjooRfVHx3NVoM7M_s8KFIQiBP7LBpKPo9bbBAZPbuCcpSJ9Z72kZsp6OA_ov4_SVps99OgjMMJrBYd8c-uMNJYXFYP91g&lib=MOv1oNJU2jx4MIDAtiS68U2pk9y82Axy2";
+const BASE_URL = "https://script.google.com/macros/s/AKfycbyIoorCdOj_K_dAFFWIj3YqlHEbveVAzMLrJKvU1Xwz5W-b4q-hX3ROsCkOe7BuRH2ePg/exec";
 
 // Variables globales para el control de la inspección
 let preguntasData = [];
