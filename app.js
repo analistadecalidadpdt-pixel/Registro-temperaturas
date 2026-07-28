@@ -211,20 +211,20 @@ document.getElementById('btn-enviar').addEventListener('click', async () => {
   };
 
   try {
-    await fetch(BASE_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
+  // Convertimos el objeto JSON a una cadena para enviarlo en una variable de formulario
+  const formData = new URLSearchParams();
+  formData.append('data', JSON.stringify(payload));
 
-    // Se oculta la pantalla del formulario y muestra el éxito
-    pantallaFormulario.classList.add('hidden');
-    pantallaExito.classList.remove('hidden');
-    
-  } catch (error) {
-    alert("Error crítico al guardar la inspección: " + error.message);
-  } finally {
+  const response = await fetch(BASE_URL, {
+    method: 'POST',
+    body: formData
+  });
+
+  const resData = await response.json();
+  console.log('Resultado:', resData);
+ } catch (error) {
+  console.error('Error enviando datos:', error);
+ }finally {
     mostrarCargando(false);
   }
 });
