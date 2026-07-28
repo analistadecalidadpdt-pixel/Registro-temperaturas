@@ -182,7 +182,10 @@ function calcularPorcentajeEnVivo() {
 // =================================================================
 // 4. ENVÍO DE DATOS A GOOGLE SHEETS
 // =================================================================
-document.getElementById('btn-enviar').addEventListener('click', async () => {
+document.getElementById('btn-enviar').addEventListener('click', async (e) => {
+  e.preventDefault(); // Previene cualquier comportamiento predeterminado del botón
+
+  // Validar observaciones en No Conformidades
   for (const id in respuestasUsuario) {
     if (respuestasUsuario[id].resultado === '0' && !respuestasUsuario[id].observaciones.trim()) {
       alert(`Por favor, escribe una observación para la no conformidad detectada en el criterio ${id}.`);
@@ -211,20 +214,36 @@ document.getElementById('btn-enviar').addEventListener('click', async () => {
   };
 
   try {
-  // Convertimos el objeto JSON a una cadena para enviarlo en una variable de formulario
-  const formData = new URLSearchParams();
-  formData.append('data', JSON.stringify(payload));
+    const formData = new URLSearchParams();
+    formData.append('data', JSON.stringify(payload));
 
-  const response = await fetch(BASE_URL, {
-    method: 'POST',
-    body: formData
-  });
+    const response = await fetch(BASE_URL, {
+      method: 'POST',
+      body: formData
+    });
 
-  const resData = await response.json();
-  console.log('Resultado:', resData);
- } catch (error) {
-  console.error('Error enviando datos:', error);
- }finally {
+    const resData = await response.json();
+
+    if (resData.result === "Error") {
+      throw new Error(resData.error);
+    }
+
+    // 1. Asignar el ID generado al elemento HTML
+    if (resData.idInspeccion) {
+      document.getElementById('generated-id').textContent = resData.idInspeccion;
+    }
+
+    // 2. Transición de pantallas (Ocultar formulario y mostrar tarjeta de éxito)
+    pantallaInicio.classList.add('hidden');
+    pantallaFormulario.classList.add('hidden');
+    pantallaExito.classList.remove('hidden');
+
+    window.scrollTo(0, 0);
+
+  } catch (error) {
+    alert("Error crítico al guardar la inspección: " + error.message);
+    console.error('Error enviando datos:', error);
+  } finally {
     mostrarCargando(false);
   }
 });
