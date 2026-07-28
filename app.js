@@ -183,7 +183,6 @@ function calcularPorcentajeEnVivo() {
 // 4. ENVÍO DE DATOS A GOOGLE SHEETS
 // =================================================================
 document.getElementById('btn-enviar').addEventListener('click', async () => {
-  // Validar si hay alguna pregunta marcada como NC que no tenga observación escrita
   for (const id in respuestasUsuario) {
     if (respuestasUsuario[id].resultado === '0' && !respuestasUsuario[id].observaciones.trim()) {
       alert(`Por favor, escribe una observación para la no conformidad detectada en el criterio ${id}.`);
@@ -195,35 +194,34 @@ document.getElementById('btn-enviar').addEventListener('click', async () => {
 
   mostrarCargando(true);
   
-  // Estructurar el paquete JSON tal como lo espera recibir el doPost de Apps Script
   const respuestasPayload = Object.keys(respuestasUsuario).map(id => ({
     idPregunta: id,
     resultado: respuestasUsuario[id].resultado,
     observaciones: respuestasUsuario[id].observaciones
   }));
 
+  const radioProd = document.querySelector('input[name="enProduccion"]:checked');
+
   const payload = {
     fecha: document.getElementById('fecha').value,
     inspector: document.getElementById('inspector').value.trim(),
     area: document.getElementById('area').value,
-    enProduccion: document.querySelector('input[name="enProduccion"]:checked').value,
+    enProduccion: radioProd ? radioProd.value : "No especificado",
     respuestas: respuestasPayload
   };
 
   try {
-    const response = await fetch(BASE_URL, {
+    await fetch(BASE_URL, {
       method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
     });
-    const result = await response.json();
+
+    // Se oculta la pantalla del formulario y muestra el éxito
+    pantallaFormulario.classList.add('hidden');
+    pantallaExito.classList.remove('hidden');
     
-    if (result.result === "Éxito") {
-      document.getElementById('generated-id').textContent = result.idInspeccion;
-      pantallafolrmulario = pantallaFormulario.classList.add('hidden');
-      pantallaExito.classList.remove('hidden');
-    } else {
-      throw new Error(result.error || "Error desconocido");
-    }
   } catch (error) {
     alert("Error crítico al guardar la inspección: " + error.message);
   } finally {
