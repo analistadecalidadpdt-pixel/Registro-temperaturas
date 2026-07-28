@@ -11,7 +11,7 @@ const respuestasUsuario = {};
 // Elementos de la interfaz (Pantallas)
 const pantallaInicio = document.getElementById('pantalla-inicio');
 const pantallaFormulario = document.getElementById('pantalla-formulario');
-const pantallaExito = document.getElementById('pantalla-exxito');
+const pantallaExito = document.getElementById('pantalla-exito');
 const loadingOverlay = document.getElementById('loading-overlay');
 
 // =================================================================
