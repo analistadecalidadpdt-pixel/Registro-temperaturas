@@ -6,11 +6,12 @@
     <title>Portal de Control de Calidad | Pan de Tata</title>
     <style>
         :root {
-            --accent-color: #c0163c; /* Guinda Pan de Tata */
-            --pink-bg: #fff5f7; 
-            --text-dark: #374151;
-            --text-gray: #6b7280;
-            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            --accent-color: #18181b; /* Negro / Gris Oscuro */
+            --accent-hover: #27272a; /* Gris un poco más claro para hover */
+            --pink-bg: #f4f4f5; 
+            --text-dark: #09090b;
+            --text-gray: #71717a;
+            --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
         }
 
         body {
@@ -33,19 +34,19 @@
             width: 100%;
             height: fit-content;
             border-radius: 20px;
-            border: 1px solid #e5e7eb;
+            border: 1px solid #e4e4e7;
             box-shadow: var(--card-shadow);
             padding: 40px;
             box-sizing: border-box;
         }
 
-        /* Encabezado interno estilo Merma */
+        /* Encabezado interno */
         .internal-header {
             display: flex;
             align-items: center;
             margin-bottom: 40px;
             padding-bottom: 25px;
-            border-bottom: 1px dashed #e5e7eb;
+            border-bottom: 1px dashed #e4e4e7;
         }
 
         .logo-container img {
@@ -59,6 +60,7 @@
             font-size: 1.8rem;
             font-weight: 800;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .title-group p {
@@ -70,33 +72,33 @@
         /* Grid de acceso a las aplicaciones */
         .menu-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 20px;
         }
 
-        /* Estilo de las tarjetas de acceso */
+        /* Estilo de las tarjetas de acceso en blanco y negro */
         .card {
             display: flex;
             flex-direction: column;
-            padding: 35px;
+            padding: 30px;
             text-decoration: none;
             border-radius: 15px;
             color: white;
             background-color: var(--accent-color);
-            box-shadow: 0 4px 15px rgba(192, 22, 60, 0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.05);
         }
 
-        /* Variación ligera para tarjetas alternas */
+        /* Variación ligera para alternar tarjetas */
         .card-alt {
-            filter: brightness(1.1);
+            background-color: #27272a;
         }
 
         .card:hover {
-            transform: translateY(-8px);
-            filter: brightness(1.2);
-            box-shadow: 0 12px 25px rgba(192, 22, 60, 0.25);
+            transform: translateY(-5px);
+            background-color: #3f3f46;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
         }
 
         .card:active {
@@ -105,14 +107,14 @@
 
         .card h3 {
             margin: 0;
-            font-size: 1.5rem;
+            font-size: 1.35rem;
             font-weight: 700;
         }
 
         .card p {
-            margin: 12px 0 0;
-            font-size: 1rem;
-            opacity: 0.9;
+            margin: 10px 0 0;
+            font-size: 0.95rem;
+            opacity: 0.85;
             line-height: 1.4;
         }
 
@@ -162,10 +164,15 @@
                 <p>Auditoría de higiene, uniforme y estado del personal por áreas.</p>
             </a>
 
-            <!-- Nueva tarjeta agregada -->
             <a href="autoinspecciones.html" class="card card-alt">
                 <h3>🔍 Autoinspecciones</h3>
                 <p>Verificación de condiciones de orden, limpieza y estatus de áreas.</p>
+            </a>
+
+            <!-- Nueva tarjeta agregada: Liberación de Producto -->
+            <a href="liberacion.html" class="card">
+                <h3>🍞 Liberación de Producto</h3>
+                <p>Inspección y liberación de productos terminados para distribución.</p>
             </a>
         </div>
 
