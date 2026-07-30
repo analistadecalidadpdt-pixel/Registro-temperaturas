@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pan de Tata - Liberación de Productos</title>
+  <style>
+    :root {
+      --bg-body: #f4f5f7;
+      --card-bg: #ffffff;
+      --text-main: #111827;
+      --text-muted: #4b5563;
+      --border-color: #e5e7eb;
+      --input-bg: #f9fafb;
+      --dark-bar: #18181b;
+      --status-green: #16a34a;
+      --status-green-bg: #f0fdf4;
+      --status-yellow: #d97706;
+      --status-yellow-bg: #fffbeb;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-body);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding-bottom: 40px;
+    }
+
+    /* Barra Superior estilo Pan de Tata */
+    .top-bar {
+      width: 100%;
+      background-color: var(--dark-bar);
+      color: #ffffff;
+      padding: 12px 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    .brand-logo {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background-color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .brand-logo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .brand-title {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-title h1 {
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      line-height: 1.1;
+      text-transform: uppercase;
+    }
+
+    .brand-title span {
+      font-size: 0.75rem;
+      color: #a1a1aa;
+      margin-top: 2px;
+    }
+
+    /* Tarjeta Principal */
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      width: 92%;
+      max-width: 520px;
+      padding: 24px 20px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      border: 1px solid var(--border-color);
+    }
+
+    .card-header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .card-header h2 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+
+    /* Formularios */
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .input-wrapper {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    input[type="date"],
+    input[type="text"],
+    input[type="number"],
+    textarea {
+      width: 100%;
+      padding: 12px 14px;
+      background-color: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      font-size: 0.95rem;
+      color: var(--text-main);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus, textarea:focus {
+      border-color: #18181b;
+      box-shadow: 0 0 0 2px rgba(24, 24, 27, 0.1);
+      background-color: #ffffff;
+    }
+
+    .unit-badge {
+      position: absolute;
+      right: 12px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      background: #e5e7eb;
+      padding: 4px 8px;
+      border-radius: 4px;
+      pointer-events: none;
+    }
+
+    /* Selector de Estado (Semáforo) */
+    .status-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 6px;
+    }
+
+    .status-option {
+      position: relative;
+    }
+
+    .status-option input {
+      position: absolute;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .status-btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 8px;
+      border: 2px solid var(--border-color);
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.88rem;
+      cursor: pointer;
+      background-color: #ffffff;
+      transition: all 0.2s;
+    }
+
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    .status-option.green .dot { background-color: var(--status-green); }
+    .status-option.yellow .dot { background-color: var(--status-yellow); }
+
+    .status-option.green input:checked + .status-btn {
+      border-color: var(--status-green);
+      background-color: var(--status-green-bg);
+      color: var(--status-green);
+    }
+
+    .status-option.yellow input:checked + .status-btn {
+      border-color: var(--status-yellow);
+      background-color: var(--status-yellow-bg);
+      color: var(--status-yellow);
+    }
+
+    /* Parámetros No Conformes */
+    .parameters-container {
+      margin-top: 16px;
+      padding: 14px;
+      background-color: #fffbeb;
+      border: 1px solid #fde68a;
+      border-radius: 8px;
+      display: none;
+    }
+
+    .parameters-container.active {
+      display: block;
+    }
+
+    .parameters-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: #92400e;
+      margin-bottom: 10px;
+    }
+
+    .parameters-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .checkbox-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+      color: #78350f;
+      cursor: pointer;
+    }
+
+    .checkbox-label input {
+      accent-color: var(--status-yellow);
+      width: 18px;
+      height: 18px;
+    }
+
+    /* Botón de Envío */
+    .submit-btn {
+      width: 100%;
+      margin-top: 20px;
+      padding: 14px;
+      background-color: var(--dark-bar);
+      color: #ffffff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background-color 0.2s;
+    }
+
+    .submit-btn:hover {
+      background-color: #27272a;
+    }
+
+    .submit-btn:disabled {
+      background-color: #a1a1aa;
+      cursor: not-allowed;
+    }
+
+    /* Mensaje de Estado */
+    #statusMessage {
+      margin-top: 16px;
+      padding: 10px;
+      border-radius: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-align: center;
+      display: none;
+    }
+
+    #statusMessage.success {
+      display: block;
+      background-color: var(--status-green-bg);
+      color: var(--status-green);
+      border: 1px solid #bbf7d0;
+    }
+
+    #statusMessage.error {
+      display: block;
+      background-color: #fef2f2;
+      color: #dc2626;
+      border: 1px solid #fecaca;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Encabezado Superior -->
+  <header class="top-bar">
+    <div class="brand-logo">
+      <img src="logo.jpg" alt="Pan de Tata Logo" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%2318181b\'><circle cx=\'12\' cy=\'12\' r=\'10\'/></svg>'">
+    </div>
+    <div class="brand-title">
+      <h1>PAN DE TATA</h1>
+      <span>Liberación de Producto F-CC-02-001</span>
+    </div>
+  </header>
+
+  <!-- Tarjeta del Formulario -->
+  <main class="card">
+    <div class="card-header">
+      <h2>Datos de Liberación</h2>
+    </div>
+
+    <form id="releaseForm">
+      
+      <!-- Fecha de Inspección -->
+      <div class="form-group">
+        <label for="fecha">Fecha de Inspección</label>
+        <input type="date" id="fecha" required>
+      </div>
+
+      <!-- Nombre del Responsable -->
+      <div class="form-group">
+        <label for="inspector">Nombre del Responsable</label>
+        <input type="text" id="inspector" placeholder="Ej. Paola Gonzalez" required>
+      </div>
+
+      <!-- Campo de búsqueda/escritura de Producto con Búsqueda Rápida -->
+      <div class="form-group">
+        <label for="producto">Escribe o busca el Producto (Código / Nombre)</label>
+        <input type="text" id="producto" list="listaProductos" placeholder="Escribe para buscar... ej: PTEM0001" autocomplete="off" required>
+        <datalist id="listaProductos">
+          <!-- Opciones cargadas dinámicamente -->
+        </datalist>
+      </div>
+
+      <!-- Cantidad de Paquetes/Unidades -->
+      <div class="form-group">
+        <label for="cantidad" id="lblCantidad">Cantidad Liberada</label>
+        <div class="input-wrapper">
+          <input type="number" id="cantidad" min="1" placeholder="Ej. 150" required>
+          <span class="unit-badge" id="unitBadge">PAQ</span>
+        </div>
+      </div>
+
+      <!-- Estado de Liberación (Semáforo) -->
+      <div class="form-group">
+        <label>Estado de Liberación</label>
+        <div class="status-group">
+          <label class="status-option green">
+            <input type="radio" name="estado" value="Verde" checked>
+            <div class="status-btn">
+              <span class="dot"></span>
+              Conforme (Verde)
+            </div>
+          </label>
+
+          <label class="status-option yellow">
+            <input type="radio" name="estado" value="Amarillo">
+            <div class="status-btn">
+              <span class="dot"></span>
+              Irregular (Amarillo)
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Despliegue de Parámetros No Conformes -->
+      <div class="parameters-container" id="parametersContainer">
+        <div class="parameters-title">Selecciona los parámetros NO conformes:</div>
+        <div class="parameters-grid">
+          <label class="checkbox-label"><input type="checkbox" name="parametro" value="Olor"> Olor</label>
+          <label class="checkbox-label"><input type="checkbox" name="parametro" value="Sabor"> Sabor</label>
+          <label class="checkbox-label"><input type="checkbox" name="parametro" value="Color"> Color</label>
+          <label class="checkbox-label"><input type="checkbox" name="parametro" value="Altura"> Altura</label>
+          <label class="checkbox-label"><input type="checkbox" name="parametro" value="Peso"> Peso</label>
+          <label class="checkbox-label"><input type="checkbox" name="parametro" value="Apariencia"> Apariencia</label>
+          <label class="checkbox-label"><input type="checkbox" name="parametro" value="Consistencia"> Consistencia</label>
+        </div>
+      </div>
+
+      <!-- Observaciones / Novedades -->
+      <div class="form-group" style="margin-top: 16px;">
+        <label for="observaciones">Observaciones / Novedades</label>
+        <textarea id="observaciones" rows="3" placeholder="Indicar cualquier novedad o detalle sobre la liberación..."></textarea>
+      </div>
+
+      <!-- Botón Enviar -->
+      <button type="submit" class="submit-btn" id="btnSubmit">
+        Guardar Liberación ➔
+      </button>
+
+    </form>
+
+    <div id="statusMessage"></div>
+  </main>
+
+  <script>
+    // URL desplegada de tu Google Apps Script
+    const API_URL = "URL_DE_TU_APPS_SCRIPT_AQUI";
+
+    let productosData = [];
+
+    document.addEventListener("DOMContentLoaded", () => {
+      // Fecha actual por defecto
+      document.getElementById("fecha").value = new Date().toISOString().split('T')[0];
+      
+      // Cargar catálogo de productos
+      fetchProductos();
+
+      // Detectar selección/escritura de producto para actualizar la Unidad de Medida (UM)
+      const inputProducto = document.getElementById("producto");
+      
+      const updateUnit = () => {
+        const selectedValue = inputProducto.value.trim();
+        const prod = productosData.find(p => `${p.codigo} - ${p.nombre}` === selectedValue || p.codigo === selectedValue);
+        
+        const um = prod ? prod.um : 'PAQ';
+        document.getElementById("unitBadge").textContent = um;
+        document.getElementById("lblCantidad").textContent = `Cantidad Liberada (${um})`;
+      };
+
+      inputProducto.addEventListener("input", updateUnit);
+      inputProducto.addEventListener("change", updateUnit);
+
+      // Mostrar/ocultar lista de desvíos según semáforo
+      const radiosEstado = document.querySelectorAll('input[name="estado"]');
+      const paramContainer = document.getElementById("parametersContainer");
+
+      radiosEstado.forEach(radio => {
+        radio.addEventListener("change", (e) => {
+          if (e.target.value === "Amarillo") {
+            paramContainer.classList.add("active");
+          } else {
+            paramContainer.classList.remove("active");
+            document.querySelectorAll('input[name="parametro"]').forEach(cb => cb.checked = false);
+          }
+        });
+      });
+    });
+
+    async function fetchProductos() {
+      const datalist = document.getElementById("listaProductos");
+      try {
+        const res = await fetch(API_URL);
+        const data = await res.json();
+        
+        if (data.status === "success" && Array.isArray(data.productos)) {
+          productosData = data.productos;
+          datalist.innerHTML = "";
+          
+          productosData.forEach(prod => {
+            const option = document.createElement("option");
+            const fullText = `${prod.codigo} - ${prod.nombre}`;
+            option.value = fullText;
+            datalist.appendChild(option);
+          });
+        }
+      } catch (err) {
+        console.error("Error cargando productos:", err);
+      }
+    }
+
+    // Envío del registro
+    document.getElementById("releaseForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      
+      const btn = document.getElementById("btnSubmit");
+      const statusMsg = document.getElementById("statusMessage");
+      
+      const parametrosSeleccionados = [];
+      if (document.querySelector('input[name="estado"]:checked').value === "Amarillo") {
+        document.querySelectorAll('input[name="parametro"]:checked').forEach(cb => {
+          parametrosSeleccionados.push(cb.value);
+        });
+      }
+
+      const payload = {
+        fecha: document.getElementById("fecha").value,
+        inspector: document.getElementById("inspector").value,
+        producto: document.getElementById("producto").value,
+        cantidad: document.getElementById("cantidad").value,
+        um: document.getElementById("unitBadge").textContent,
+        estado: document.querySelector('input[name="estado"]:checked').value,
+        parametrosNoConformes: parametrosSeleccionados,
+        observaciones: document.getElementById("observaciones").value
+      };
+
+      btn.disabled = true;
+      btn.textContent = "Guardando...";
+      statusMsg.className = "";
+      statusMsg.style.display = "none";
+
+      try {
+        await fetch(API_URL, {
+          method: "POST",
+          mode: "no-cors",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        statusMsg.className = "success";
+        statusMsg.textContent = "¡Registro guardado exitosamente!";
+        
+        const fechaActual = document.getElementById("fecha").value;
+        const inspectorActual = document.getElementById("inspector").value;
+        
+        document.getElementById("releaseForm").reset();
+        
+        document.getElementById("fecha").value = fechaActual;
+        document.getElementById("inspector").value = inspectorActual;
+        document.getElementById("parametersContainer").classList.remove("active");
+        document.getElementById("unitBadge").textContent = "PAQ";
+        document.getElementById("lblCantidad").textContent = "Cantidad Liberada (PAQ)";
+
+      } catch (err) {
+        statusMsg.className = "error";
+        statusMsg.textContent = "Error al conectar con el servidor.";
+      } finally {
+        btn.disabled = false;
+        btn.textContent = "Guardar Liberación ➔";
+      }
+    });
+  </script>
+</body>
+</html>
