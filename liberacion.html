@@ -333,12 +333,13 @@
 
     #statusMessage {
       margin-top: 16px;
-      padding: 10px;
-      border-radius: 6px;
+      padding: 12px;
+      border-radius: 8px;
       font-size: 0.9rem;
       font-weight: 600;
       text-align: center;
       display: none;
+      word-break: break-word;
     }
 
     #statusMessage.success {
@@ -433,7 +434,7 @@
 
       <!-- Despliegue de Parámetros No Conformes -->
       <div class="parameters-container" id="parametersContainer">
-        <div class="parameters-title">Selecciona los parámetros NO conformes:</div>
+        <div class="parameters-title">Selecciona los parámetros no conformes:</div>
         <div class="parameters-grid">
           <label class="checkbox-label"><input type="checkbox" name="parametro" value="Olor"> Olor</label>
           <label class="checkbox-label"><input type="checkbox" name="parametro" value="Sabor"> Sabor</label>
@@ -619,13 +620,29 @@
       statusMsg.className = "";
       statusMsg.style.display = "none";
 
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 25000); // Timeout de 25 segundos
+
       try {
+        // Enviar con Content-Type text/plain para evitar precarga CORS OPTIONS bloqueante en Google Apps Script
         const response = await fetch(API_URL, {
           method: "POST",
-          body: JSON.stringify(payload)
+          headers: {
+            "Content-Type": "text/plain;charset=utf-8"
+          },
+          body: JSON.stringify(payload),
+          signal: controller.signal
         });
 
-        const result = await response.json();
+        clearTimeout(timeoutId);
+
+        const responseText = await response.text();
+        let result;
+        try {
+          result = JSON.parse(responseText);
+        } catch (jsonErr) {
+          throw new Error("El servidor respondió con un formato no JSON. Verifica que la aplicación web de Apps Script esté configurada con acceso para 'Cualquier persona'.");
+        }
 
         if (result.status === "success" && result.verified) {
           statusMsg.className = "success";
@@ -649,7 +666,11 @@
       } catch (err) {
         console.error("Error al enviar registro:", err);
         statusMsg.className = "error";
-        statusMsg.textContent = "Error al conectar con Google Apps Script. Verifica la conexión o URL.";
+        if (err.name === 'AbortError') {
+          statusMsg.textContent = "La solicitud tardó demasiado tiempo. Verifica tu conexión a internet o la URL de Apps Script.";
+        } else {
+          statusMsg.textContent = err.message || "Error al conectar con Google Apps Script. Verifica la configuración de la implementación.";
+        }
       } finally {
         btn.disabled = false;
         btn.textContent = "Guardar Liberación ➔";
