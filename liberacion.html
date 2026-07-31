@@ -390,13 +390,13 @@
       <!-- Campo Número de Lote -->
       <div class="form-group">
         <label for="lote">Número / Código de Lote</label>
-        <input type="text" id="lote" placeholder="Ej. 01" required>
+        <input type="text" id="lote" placeholder="Ej. L-20240801" required>
       </div>
 
       <!-- Campo de búsqueda/escritura de Producto con Búsqueda Rápida Personalizada -->
       <div class="form-group autocomplete-wrapper">
         <label for="producto">Escribe o busca el Producto (Código / Nombre)</label>
-        <input type="text" id="producto" placeholder="Escribe para buscar... Ej: PTEM0001" autocomplete="off" required>
+        <input type="text" id="producto" placeholder="Escribe para buscar... ej: PTEM0001" autocomplete="off" required>
         <div id="autocompleteList" class="autocomplete-dropdown"></div>
       </div>
 
@@ -620,31 +620,36 @@
       statusMsg.style.display = "none";
 
       try {
-        await fetch(API_URL, {
+        const response = await fetch(API_URL, {
           method: "POST",
-          mode: "no-cors",
-          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload)
         });
 
-        statusMsg.className = "success";
-        statusMsg.textContent = "¡Registro guardado exitosamente!";
-        
-        const fechaActual = document.getElementById("fecha").value;
-        const inspectorActual = document.getElementById("inspector").value;
-        
-        document.getElementById("releaseForm").reset();
-        
-        document.getElementById("fecha").value = fechaActual;
-        document.getElementById("inspector").value = inspectorActual;
-        document.getElementById("parametersContainer").classList.remove("active");
-        document.getElementById("unitBadge").textContent = "PAQ";
-        document.getElementById("lblCantidad").textContent = "Cantidad Liberada (PAQ)";
+        const result = await response.json();
+
+        if (result.status === "success" && result.verified) {
+          statusMsg.className = "success";
+          statusMsg.textContent = `✔ ${result.message}`;
+          
+          const fechaActual = document.getElementById("fecha").value;
+          const inspectorActual = document.getElementById("inspector").value;
+          
+          document.getElementById("releaseForm").reset();
+          
+          document.getElementById("fecha").value = fechaActual;
+          document.getElementById("inspector").value = inspectorActual;
+          document.getElementById("parametersContainer").classList.remove("active");
+          document.getElementById("unitBadge").textContent = "PAQ";
+          document.getElementById("lblCantidad").textContent = "Cantidad Liberada (PAQ)";
+        } else {
+          statusMsg.className = "error";
+          statusMsg.textContent = result.message || "No se pudo verificar el guardado en la hoja de cálculo.";
+        }
 
       } catch (err) {
         console.error("Error al enviar registro:", err);
         statusMsg.className = "error";
-        statusMsg.textContent = "Error al conectar con el servidor.";
+        statusMsg.textContent = "Error al conectar con Google Apps Script. Verifica la conexión o URL.";
       } finally {
         btn.disabled = false;
         btn.textContent = "Guardar Liberación ➔";
