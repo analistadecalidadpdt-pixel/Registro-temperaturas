@@ -36,7 +36,6 @@
       padding-bottom: 40px;
     }
 
-    /* Barra Superior estilo Pan de Tata */
     .top-bar {
       width: 100%;
       background-color: var(--dark-bar);
@@ -86,7 +85,6 @@
       margin-top: 2px;
     }
 
-    /* Tarjeta Principal */
     .card {
       background-color: var(--card-bg);
       border-radius: 12px;
@@ -108,7 +106,6 @@
       color: var(--text-main);
     }
 
-    /* Formularios */
     .form-group {
       margin-bottom: 16px;
     }
@@ -160,7 +157,6 @@
       pointer-events: none;
     }
 
-    /* Selector de Estado (Semáforo) */
     .status-group {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -214,7 +210,6 @@
       color: var(--status-yellow);
     }
 
-    /* Parámetros No Conformes */
     .parameters-container {
       margin-top: 16px;
       padding: 14px;
@@ -256,7 +251,6 @@
       height: 18px;
     }
 
-    /* Botón de Envío */
     .submit-btn {
       width: 100%;
       margin-top: 20px;
@@ -284,7 +278,6 @@
       cursor: not-allowed;
     }
 
-    /* Mensaje de Estado */
     #statusMessage {
       margin-top: 16px;
       padding: 10px;
@@ -312,7 +305,6 @@
 </head>
 <body>
 
-  <!-- Encabezado Superior -->
   <header class="top-bar">
     <div class="brand-logo">
       <img src="PDT.png" alt="Pan de Tata Logo" onerror="this.src='data:image/svg+xml;utf8,<svg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 24 24\' fill=\'%2318181b\'><circle cx=\'12\' cy=\'12\' r=\'10\'/></svg>'">
@@ -323,7 +315,6 @@
     </div>
   </header>
 
-  <!-- Tarjeta del Formulario -->
   <main class="card">
     <div class="card-header">
       <h2>Datos de Liberación</h2>
@@ -341,6 +332,12 @@
       <div class="form-group">
         <label for="inspector">Nombre del Responsable</label>
         <input type="text" id="inspector" placeholder="Ej. Paola Gonzalez" required>
+      </div>
+
+      <!-- Campo Número de Lote -->
+      <div class="form-group">
+        <label for="lote">Número / Código de Lote</label>
+        <input type="text" id="lote" placeholder="Ej. L-20240801" required>
       </div>
 
       <!-- Campo de búsqueda/escritura de Producto con Búsqueda Rápida -->
@@ -369,7 +366,7 @@
             <input type="radio" name="estado" value="Verde" checked>
             <div class="status-btn">
               <span class="dot"></span>
-              Conforme
+              Conforme 
             </div>
           </label>
 
@@ -377,7 +374,7 @@
             <input type="radio" name="estado" value="Amarillo">
             <div class="status-btn">
               <span class="dot"></span>
-              Irregular
+              Irregular 
             </div>
           </label>
         </div>
@@ -385,7 +382,7 @@
 
       <!-- Despliegue de Parámetros No Conformes -->
       <div class="parameters-container" id="parametersContainer">
-        <div class="parameters-title">Selecciona los parámetros no conformes:</div>
+        <div class="parameters-title">Selecciona los parámetros NO conformes:</div>
         <div class="parameters-grid">
           <label class="checkbox-label"><input type="checkbox" name="parametro" value="Olor"> Olor</label>
           <label class="checkbox-label"><input type="checkbox" name="parametro" value="Sabor"> Sabor</label>
@@ -488,9 +485,6 @@
             option.value = fullText;
             datalist.appendChild(option);
           });
-          console.log("Catálogo de productos cargado correctamente:", productosData.length, "productos.");
-        } else {
-          console.warn("La API no devolvió una lista válida:", data);
         }
       } catch (err) {
         console.error("Error al cargar productos desde Apps Script:", err);
@@ -513,6 +507,7 @@
       const payload = {
         fecha: document.getElementById("fecha").value,
         inspector: document.getElementById("inspector").value.trim(),
+        lote: document.getElementById("lote").value.trim(),
         producto: document.getElementById("producto").value.trim(),
         cantidad: Number(document.getElementById("cantidad").value),
         um: document.getElementById("unitBadge").textContent,
