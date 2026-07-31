@@ -133,7 +133,7 @@
       background-color: var(--input-bg);
       border: 1px solid var(--border-color);
       border-radius: 8px;
-      font-size: 0.95rem;
+      font-size: 16px; /* 16px evita el zoom automático en iOS */
       color: var(--text-main);
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
@@ -143,6 +143,59 @@
       border-color: #18181b;
       box-shadow: 0 0 0 2px rgba(24, 24, 27, 0.1);
       background-color: #ffffff;
+    }
+
+    /* Estilos para el autocompletar personalizado compatible con móviles */
+    .autocomplete-wrapper {
+      position: relative;
+    }
+
+    .autocomplete-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      max-height: 220px;
+      overflow-y: auto;
+      background-color: #ffffff;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      z-index: 1000;
+      margin-top: 4px;
+      display: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .autocomplete-dropdown.active {
+      display: block;
+    }
+
+    .autocomplete-item {
+      padding: 12px 14px;
+      font-size: 0.9rem;
+      color: var(--text-main);
+      cursor: pointer;
+      border-bottom: 1px solid #f3f4f6;
+      transition: background-color 0.15s ease;
+    }
+
+    .autocomplete-item:last-child {
+      border-bottom: none;
+    }
+
+    .autocomplete-item:active,
+    .autocomplete-item:hover {
+      background-color: #f4f5f7;
+      color: #18181b;
+      font-weight: 600;
+    }
+
+    .autocomplete-no-results {
+      padding: 12px 14px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-style: italic;
     }
 
     .unit-badge {
@@ -337,16 +390,14 @@
       <!-- Campo Número de Lote -->
       <div class="form-group">
         <label for="lote">Número / Código de Lote</label>
-        <input type="text" id="lote" placeholder="Ej. 01" required>
+        <input type="text" id="lote" placeholder="Ej. L-20240801" required>
       </div>
 
-      <!-- Campo de búsqueda/escritura de Producto con Búsqueda Rápida -->
-      <div class="form-group">
+      <!-- Campo de búsqueda/escritura de Producto con Búsqueda Rápida Personalizada -->
+      <div class="form-group autocomplete-wrapper">
         <label for="producto">Escribe o busca el Producto (Código / Nombre)</label>
-        <input type="text" id="producto" list="listaProductos" placeholder="Escribe para buscar... ej: PTEM0001" autocomplete="off" required>
-        <datalist id="listaProductos">
-          <!-- Opciones cargadas dinámicamente -->
-        </datalist>
+        <input type="text" id="producto" placeholder="Escribe para buscar... ej: PTEM0001" autocomplete="off" required>
+        <div id="autocompleteList" class="autocomplete-dropdown"></div>
       </div>
 
       <!-- Cantidad de Paquetes/Unidades -->
@@ -422,8 +473,8 @@
       // Cargar catálogo de productos
       fetchProductos();
 
-      // Detectar selección/escritura de producto para actualizar la Unidad de Medida (UM)
       const inputProducto = document.getElementById("producto");
+      const autocompleteList = document.getElementById("autocompleteList");
       
       const updateUnit = () => {
         const query = inputProducto.value.trim().toLowerCase();
@@ -446,8 +497,68 @@
         document.getElementById("lblCantidad").textContent = `Cantidad Liberada (${um})`;
       };
 
-      inputProducto.addEventListener("input", updateUnit);
-      inputProducto.addEventListener("change", updateUnit);
+      // Función para renderizar menú desplegable responsivo móvil
+      function renderAutocomplete(filterQuery = '') {
+        const query = filterQuery.trim().toLowerCase();
+        autocompleteList.innerHTML = '';
+
+        if (!productosData || productosData.length === 0) {
+          autocompleteList.classList.remove('active');
+          return;
+        }
+
+        const filtered = productosData.filter(p => {
+          const cod = String(p.codigo || '').trim().toLowerCase();
+          const nom = String(p.nombre || '').trim().toLowerCase();
+          const full = (cod && nom) ? `${cod} - ${nom}` : (cod || nom);
+          return !query || full.includes(query) || cod.includes(query) || nom.includes(query);
+        });
+
+        if (filtered.length === 0) {
+          const noRes = document.createElement('div');
+          noRes.className = 'autocomplete-no-results';
+          noRes.textContent = 'No se encontraron productos coincidentes';
+          autocompleteList.appendChild(noRes);
+          autocompleteList.classList.add('active');
+          return;
+        }
+
+        filtered.slice(0, 40).forEach(prod => {
+          const cod = String(prod.codigo || '').trim();
+          const nom = String(prod.nombre || '').trim();
+          const fullText = (cod && nom) ? `${cod} - ${nom}` : (cod || nom);
+          
+          const item = document.createElement('div');
+          item.className = 'autocomplete-item';
+          item.textContent = fullText;
+          
+          item.addEventListener('click', () => {
+            inputProducto.value = fullText;
+            autocompleteList.classList.remove('active');
+            updateUnit();
+          });
+          
+          autocompleteList.appendChild(item);
+        });
+
+        autocompleteList.classList.add('active');
+      }
+
+      inputProducto.addEventListener('input', (e) => {
+        renderAutocomplete(e.target.value);
+        updateUnit();
+      });
+
+      inputProducto.addEventListener('focus', () => {
+        renderAutocomplete(inputProducto.value);
+      });
+
+      // Ocultar la lista al hacer toque o clic fuera del campo
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('.autocomplete-wrapper')) {
+          autocompleteList.classList.remove('active');
+        }
+      });
 
       // Mostrar/ocultar lista de desvíos según semáforo
       const radiosEstado = document.querySelectorAll('input[name="estado"]');
@@ -466,25 +577,12 @@
     });
 
     async function fetchProductos() {
-      const datalist = document.getElementById("listaProductos");
       try {
         const res = await fetch(API_URL);
         const data = await res.json();
         
         if (data.status === "success" && Array.isArray(data.productos)) {
           productosData = data.productos;
-          datalist.innerHTML = "";
-          
-          productosData.forEach(prod => {
-            const cod = String(prod.codigo || '').trim();
-            const nom = String(prod.nombre || '').trim();
-            if (!cod && !nom) return;
-
-            const option = document.createElement("option");
-            const fullText = (cod && nom) ? `${cod} - ${nom}` : (cod || nom);
-            option.value = fullText;
-            datalist.appendChild(option);
-          });
         }
       } catch (err) {
         console.error("Error al cargar productos desde Apps Script:", err);
