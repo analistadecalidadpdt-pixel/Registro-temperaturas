@@ -91,7 +91,7 @@
       width: 92%;
       max-width: 520px;
       padding: 24px 20px;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
       border: 1px solid var(--border-color);
     }
 
@@ -103,7 +103,6 @@
     .card-header h2 {
       font-size: 1.4rem;
       font-weight: 700;
-      color: var(--text-main);
     }
 
     .form-group {
@@ -159,11 +158,10 @@
       background-color: #ffffff;
       border: 1px solid var(--border-color);
       border-radius: 8px;
-      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
       z-index: 1000;
       margin-top: 4px;
       display: none;
-      -webkit-overflow-scrolling: touch;
     }
 
     .autocomplete-dropdown.active {
@@ -176,25 +174,11 @@
       color: var(--text-main);
       cursor: pointer;
       border-bottom: 1px solid #f3f4f6;
-      transition: background-color 0.15s ease;
     }
 
-    .autocomplete-item:last-child {
-      border-bottom: none;
-    }
-
-    .autocomplete-item:active,
     .autocomplete-item:hover {
       background-color: #f4f5f7;
-      color: #18181b;
       font-weight: 600;
-    }
-
-    .autocomplete-no-results {
-      padding: 12px 14px;
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      font-style: italic;
     }
 
     .unit-badge {
@@ -238,7 +222,6 @@
       font-size: 0.88rem;
       cursor: pointer;
       background-color: #ffffff;
-      transition: all 0.2s;
     }
 
     .dot {
@@ -321,10 +304,6 @@
       transition: background-color 0.2s;
     }
 
-    .submit-btn:hover {
-      background-color: #27272a;
-    }
-
     .submit-btn:disabled {
       background-color: #a1a1aa;
       cursor: not-allowed;
@@ -334,11 +313,10 @@
       margin-top: 16px;
       padding: 14px;
       border-radius: 8px;
-      font-size: 0.92rem;
-      font-weight: 600;
+      font-size: 0.95rem;
+      font-weight: 700;
       text-align: center;
       display: none;
-      word-break: break-word;
       line-height: 1.4;
     }
 
@@ -457,6 +435,7 @@
     const API_URL = "https://script.google.com/macros/s/AKfycbxaBCnr_r8wP-2U2pE2aiNJNjnP6qrdwgPgqnSPp5ILs55WWDyRUcxgij6MJAGnIccxgA/exec";
 
     let productosData = [];
+    let isSubmitting = false;
 
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("fecha").value = new Date().toISOString().split('T')[0];
@@ -502,11 +481,7 @@
         });
 
         if (filtered.length === 0) {
-          const noRes = document.createElement('div');
-          noRes.className = 'autocomplete-no-results';
-          noRes.textContent = 'No se encontraron productos coincidentes';
-          autocompleteList.appendChild(noRes);
-          autocompleteList.classList.add('active');
+          autocompleteList.classList.remove('active');
           return;
         }
 
@@ -565,18 +540,19 @@
       try {
         const res = await fetch(API_URL);
         const data = await res.json();
-        
         if (data.status === "success" && Array.isArray(data.productos)) {
           productosData = data.productos;
         }
       } catch (err) {
-        console.error("Error al cargar productos desde Apps Script:", err);
+        console.error("Error al cargar productos:", err);
       }
     }
 
     document.getElementById("releaseForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       
+      if (isSubmitting) return;
+
       const btn = document.getElementById("btnSubmit");
       const statusMsg = document.getElementById("statusMessage");
       
@@ -599,75 +575,42 @@
         observaciones: document.getElementById("observaciones").value.trim()
       };
 
+      isSubmitting = true;
       btn.disabled = true;
-      btn.textContent = "Guardando y Verificando...";
+      btn.textContent = "Guardando...";
       statusMsg.className = "";
       statusMsg.style.display = "none";
 
-      let guardadoExitoso = false;
-      let mensajeRespuesta = "";
-
-      // Intento 1: Envío mediante POST
       try {
-        const response = await fetch(API_URL, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(payload)
+        const getParams = new URLSearchParams({
+          action: "save",
+          fecha: payload.fecha,
+          inspector: payload.inspector,
+          lote: payload.lote,
+          producto: payload.producto,
+          cantidad: payload.cantidad,
+          um: payload.um,
+          estado: payload.estado,
+          parametrosNoConformes: JSON.stringify(payload.parametrosNoConformes),
+          observaciones: payload.observaciones
         });
 
-        const responseText = await response.text();
-        const result = JSON.parse(responseText);
+        const res = await fetch(`${API_URL}?${getParams.toString()}`);
+        const result = await res.json();
 
         if (result.status === "success") {
-          guardadoExitoso = true;
-          mensajeRespuesta = result.message;
+          handleSuccess("¡Registro guardado con éxito!");
         } else {
-          mensajeRespuesta = result.message || "No se pudo guardar el registro.";
+          showError(result.message || "No se pudo guardar la información.");
         }
-      } catch (postErr) {
-        console.warn("POST no disponible, intentando canal GET alternativo...", postErr);
-      }
 
-      // Intento 2: Si POST no respondió success, intentar canal GET alternativo
-      if (!guardadoExitoso) {
-        try {
-          const getParams = new URLSearchParams({
-            action: "save",
-            fecha: payload.fecha,
-            inspector: payload.inspector,
-            lote: payload.lote,
-            producto: payload.producto,
-            cantidad: payload.cantidad,
-            um: payload.um,
-            estado: payload.estado,
-            parametrosNoConformes: JSON.stringify(payload.parametrosNoConformes),
-            observaciones: payload.observaciones
-          });
-
-          const getRes = await fetch(`${API_URL}?${getParams.toString()}`);
-          const getResult = await getRes.json();
-
-          if (getResult.status === "success") {
-            guardadoExitoso = true;
-            mensajeRespuesta = getResult.message;
-          } else {
-            mensajeRespuesta = getResult.message || "No se pudo escribir en la hoja.";
-          }
-        } catch (getErr) {
-          console.error("Error definitivo en ambos canales:", getErr);
-          mensajeRespuesta = "No se pudo conectar con Google Sheets. Revisa la red o autorización.";
-        }
-      }
-
-      // Rehabilitar botón en todo momento
-      btn.disabled = false;
-      btn.textContent = "Guardar Liberación ➔";
-
-      // Procesar resultado UI
-      if (guardadoExitoso) {
-        handleSuccess(mensajeRespuesta);
-      } else {
-        showError(mensajeRespuesta);
+      } catch (err) {
+        console.error("Error al enviar registro:", err);
+        showError("Error de conexión al intentar guardar. Intenta nuevamente.");
+      } finally {
+        isSubmitting = false;
+        btn.disabled = false;
+        btn.textContent = "Guardar Liberación ➔";
       }
 
       function handleSuccess(msg) {
@@ -675,23 +618,25 @@
         statusMsg.textContent = `✔ ${msg}`;
         statusMsg.style.display = "block";
         
-        // Guardar variables a mantener
+        // Retener Fecha e Inspector
         const fechaActual = document.getElementById("fecha").value;
         const inspectorActual = document.getElementById("inspector").value;
         
-        // Resetear formulario
-        document.getElementById("releaseForm").reset();
-        
-        // Restaurar variables y estado por defecto
-        document.getElementById("fecha").value = fechaActual;
-        document.getElementById("inspector").value = inspectorActual;
+        // Limpiar campos de producto, lote, cantidad, observaciones
+        document.getElementById("lote").value = "";
+        document.getElementById("producto").value = "";
+        document.getElementById("cantidad").value = "";
+        document.getElementById("observaciones").value = "";
         document.getElementById("radioGreen").checked = true;
         document.getElementById("parametersContainer").classList.remove("active");
         document.querySelectorAll('input[name="parametro"]').forEach(cb => cb.checked = false);
         document.getElementById("unitBadge").textContent = "PAQ";
         document.getElementById("lblCantidad").textContent = "Cantidad Liberada (PAQ)";
 
-        // Desplazar suavemente para ver el mensaje de confirmación
+        // Restaurar Fecha e Inspector
+        document.getElementById("fecha").value = fechaActual;
+        document.getElementById("inspector").value = inspectorActual;
+
         statusMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
 
