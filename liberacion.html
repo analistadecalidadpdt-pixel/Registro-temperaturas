@@ -133,7 +133,7 @@
       background-color: var(--input-bg);
       border: 1px solid var(--border-color);
       border-radius: 8px;
-      font-size: 16px; /* 16px evita el zoom automático en iOS */
+      font-size: 16px;
       color: var(--text-main);
       outline: none;
       transition: border-color 0.2s, box-shadow 0.2s;
@@ -145,7 +145,6 @@
       background-color: #ffffff;
     }
 
-    /* Estilos para el autocompletar personalizado compatible con móviles */
     .autocomplete-wrapper {
       position: relative;
     }
@@ -333,13 +332,14 @@
 
     #statusMessage {
       margin-top: 16px;
-      padding: 12px;
+      padding: 14px;
       border-radius: 8px;
-      font-size: 0.9rem;
+      font-size: 0.92rem;
       font-weight: 600;
       text-align: center;
       display: none;
       word-break: break-word;
+      line-height: 1.4;
     }
 
     #statusMessage.success {
@@ -376,32 +376,27 @@
 
     <form id="releaseForm">
       
-      <!-- Fecha de Inspección -->
       <div class="form-group">
         <label for="fecha">Fecha de Inspección</label>
         <input type="date" id="fecha" required>
       </div>
 
-      <!-- Nombre del Responsable -->
       <div class="form-group">
         <label for="inspector">Nombre del Responsable</label>
         <input type="text" id="inspector" placeholder="Ej. Paola Gonzalez" required>
       </div>
 
-      <!-- Campo Número de Lote -->
       <div class="form-group">
         <label for="lote">Número / Código de Lote</label>
-        <input type="text" id="lote" placeholder="Ej. L-20240801" required>
+        <input type="text" id="lote" placeholder="Ej. 01" required>
       </div>
 
-      <!-- Campo de búsqueda/escritura de Producto con Búsqueda Rápida Personalizada -->
       <div class="form-group autocomplete-wrapper">
         <label for="producto">Escribe o busca el Producto (Código / Nombre)</label>
-        <input type="text" id="producto" placeholder="Escribe para buscar... ej: PTEM0001" autocomplete="off" required>
+        <input type="text" id="producto" placeholder="Escribe para buscar... Ej: PTEM0001" autocomplete="off" required>
         <div id="autocompleteList" class="autocomplete-dropdown"></div>
       </div>
 
-      <!-- Cantidad de Paquetes/Unidades -->
       <div class="form-group">
         <label for="cantidad" id="lblCantidad">Cantidad Liberada (PAQ)</label>
         <div class="input-wrapper">
@@ -410,29 +405,27 @@
         </div>
       </div>
 
-      <!-- Estado de Liberación (Semáforo) -->
       <div class="form-group">
         <label>Estado de Liberación</label>
         <div class="status-group">
           <label class="status-option green">
-            <input type="radio" name="estado" value="Verde" checked>
+            <input type="radio" name="estado" id="radioGreen" value="Verde" checked>
             <div class="status-btn">
               <span class="dot"></span>
-              Conforme (Verde)
+              Conforme 
             </div>
           </label>
 
           <label class="status-option yellow">
-            <input type="radio" name="estado" value="Amarillo">
+            <input type="radio" name="estado" id="radioYellow" value="Amarillo">
             <div class="status-btn">
               <span class="dot"></span>
-              Irregular (Amarillo)
+              Irregular 
             </div>
           </label>
         </div>
       </div>
 
-      <!-- Despliegue de Parámetros No Conformes -->
       <div class="parameters-container" id="parametersContainer">
         <div class="parameters-title">Selecciona los parámetros NO conformes:</div>
         <div class="parameters-grid">
@@ -446,13 +439,11 @@
         </div>
       </div>
 
-      <!-- Observaciones / Novedades -->
       <div class="form-group" style="margin-top: 16px;">
         <label for="observaciones">Observaciones / Novedades</label>
         <textarea id="observaciones" rows="3" placeholder="Indicar cualquier novedad o detalle sobre la liberación..."></textarea>
       </div>
 
-      <!-- Botón Enviar -->
       <button type="submit" class="submit-btn" id="btnSubmit">
         Guardar Liberación ➔
       </button>
@@ -468,10 +459,7 @@
     let productosData = [];
 
     document.addEventListener("DOMContentLoaded", () => {
-      // Fecha actual por defecto
       document.getElementById("fecha").value = new Date().toISOString().split('T')[0];
-      
-      // Cargar catálogo de productos
       fetchProductos();
 
       const inputProducto = document.getElementById("producto");
@@ -485,7 +473,6 @@
           return;
         }
 
-        // Búsqueda inteligente e insensible a mayúsculas/minúsculas
         const prod = productosData.find(p => {
           const cod = String(p.codigo || '').trim().toLowerCase();
           const nom = String(p.nombre || '').trim().toLowerCase();
@@ -498,7 +485,6 @@
         document.getElementById("lblCantidad").textContent = `Cantidad Liberada (${um})`;
       };
 
-      // Función para renderizar menú desplegable responsivo móvil
       function renderAutocomplete(filterQuery = '') {
         const query = filterQuery.trim().toLowerCase();
         autocompleteList.innerHTML = '';
@@ -554,14 +540,12 @@
         renderAutocomplete(inputProducto.value);
       });
 
-      // Ocultar la lista al hacer toque o clic fuera del campo
       document.addEventListener('click', (e) => {
         if (!e.target.closest('.autocomplete-wrapper')) {
           autocompleteList.classList.remove('active');
         }
       });
 
-      // Mostrar/ocultar lista de desvíos según semáforo
       const radiosEstado = document.querySelectorAll('input[name="estado"]');
       const paramContainer = document.getElementById("parametersContainer");
 
@@ -616,64 +600,104 @@
       };
 
       btn.disabled = true;
-      btn.textContent = "Guardando...";
+      btn.textContent = "Guardando y Verificando...";
       statusMsg.className = "";
       statusMsg.style.display = "none";
 
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 25000); // Timeout de 25 segundos
+      let guardadoExitoso = false;
+      let mensajeRespuesta = "";
 
+      // Intento 1: Envío mediante POST
       try {
-        // Enviar con Content-Type text/plain para evitar precarga CORS OPTIONS bloqueante en Google Apps Script
         const response = await fetch(API_URL, {
           method: "POST",
-          headers: {
-            "Content-Type": "text/plain;charset=utf-8"
-          },
-          body: JSON.stringify(payload),
-          signal: controller.signal
+          headers: { "Content-Type": "text/plain;charset=utf-8" },
+          body: JSON.stringify(payload)
         });
 
-        clearTimeout(timeoutId);
-
         const responseText = await response.text();
-        let result;
-        try {
-          result = JSON.parse(responseText);
-        } catch (jsonErr) {
-          throw new Error("El servidor respondió con un formato no JSON. Verifica que la aplicación web de Apps Script esté configurada con acceso para 'Cualquier persona'.");
-        }
+        const result = JSON.parse(responseText);
 
         if (result.status === "success" && result.verified) {
-          statusMsg.className = "success";
-          statusMsg.textContent = `✔ ${result.message}`;
-          
-          const fechaActual = document.getElementById("fecha").value;
-          const inspectorActual = document.getElementById("inspector").value;
-          
-          document.getElementById("releaseForm").reset();
-          
-          document.getElementById("fecha").value = fechaActual;
-          document.getElementById("inspector").value = inspectorActual;
-          document.getElementById("parametersContainer").classList.remove("active");
-          document.getElementById("unitBadge").textContent = "PAQ";
-          document.getElementById("lblCantidad").textContent = "Cantidad Liberada (PAQ)";
-        } else {
-          statusMsg.className = "error";
-          statusMsg.textContent = result.message || "No se pudo verificar el guardado en la hoja de cálculo.";
+          guardadoExitoso = true;
+          mensajeRespuesta = result.message;
         }
+      } catch (postErr) {
+        console.warn("POST no disponible, intentando canal GET alternativo...", postErr);
+      }
 
-      } catch (err) {
-        console.error("Error al enviar registro:", err);
-        statusMsg.className = "error";
-        if (err.name === 'AbortError') {
-          statusMsg.textContent = "La solicitud tardó demasiado tiempo. Verifica tu conexión a internet o la URL de Apps Script.";
-        } else {
-          statusMsg.textContent = err.message || "Error al conectar con Google Apps Script. Verifica la configuración de la implementación.";
+      // Intento 2: Si POST no respondió success, intentar canal GET alternativo
+      if (!guardadoExitoso) {
+        try {
+          const getParams = new URLSearchParams({
+            action: "save",
+            fecha: payload.fecha,
+            inspector: payload.inspector,
+            lote: payload.lote,
+            producto: payload.producto,
+            cantidad: payload.cantidad,
+            um: payload.um,
+            estado: payload.estado,
+            parametrosNoConformes: JSON.stringify(payload.parametrosNoConformes),
+            observaciones: payload.observaciones
+          });
+
+          const getRes = await fetch(`${API_URL}?${getParams.toString()}`);
+          const getResult = await getRes.json();
+
+          if (getResult.status === "success" && getResult.verified) {
+            guardadoExitoso = true;
+            mensajeRespuesta = getResult.message;
+          } else {
+            mensajeRespuesta = getResult.message || "No se pudo verificar la escritura en la hoja.";
+          }
+        } catch (getErr) {
+          console.error("Error definitivo en ambos canales:", getErr);
+          mensajeRespuesta = "No se pudo conectar con Google Sheets. Revisa la red o autorización.";
         }
-      } finally {
-        btn.disabled = false;
-        btn.textContent = "Guardar Liberación ➔";
+      }
+
+      // Rehabilitar botón en todo momento
+      btn.disabled = false;
+      btn.textContent = "Guardar Liberación ➔";
+
+      // Procesar resultado UI
+      if (guardadoExitoso) {
+        handleSuccess(mensajeRespuesta);
+      } else {
+        showError(mensajeRespuesta);
+      }
+
+      function handleSuccess(msg) {
+        statusMsg.className = "success";
+        statusMsg.textContent = `✔ ${msg}`;
+        statusMsg.style.display = "block";
+        
+        // Guardar variables a mantener
+        const fechaActual = document.getElementById("fecha").value;
+        const inspectorActual = document.getElementById("inspector").value;
+        
+        // Resetear formulario
+        document.getElementById("releaseForm").reset();
+        
+        // Restaurar variables y estado por defecto
+        document.getElementById("fecha").value = fechaActual;
+        document.getElementById("inspector").value = inspectorActual;
+        document.getElementById("radioGreen").checked = true;
+        document.getElementById("parametersContainer").classList.remove("active");
+        document.querySelectorAll('input[name="parametro"]').forEach(cb => cb.checked = false);
+        document.getElementById("unitBadge").textContent = "PAQ";
+        document.getElementById("lblCantidad").textContent = "Cantidad Liberada (PAQ)";
+
+        // Desplazar suavemente para ver el mensaje de confirmación
+        statusMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+
+      function showError(msg) {
+        statusMsg.className = "error";
+        statusMsg.textContent = `✖ ${msg}`;
+        statusMsg.style.display = "block";
+        statusMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
     });
   </script>
