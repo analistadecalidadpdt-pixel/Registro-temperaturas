@@ -388,12 +388,12 @@
 
       <div class="form-group">
         <label for="lote">Número / Código de Lote</label>
-        <input type="text" id="lote" placeholder="Ej. 01" required>
+        <input type="text" id="lote" placeholder="Ej. L-20240801" required>
       </div>
 
       <div class="form-group autocomplete-wrapper">
         <label for="producto">Escribe o busca el Producto (Código / Nombre)</label>
-        <input type="text" id="producto" placeholder="Escribe para buscar... Ej: PTEM0001" autocomplete="off" required>
+        <input type="text" id="producto" placeholder="Escribe para buscar... ej: PTEM0001" autocomplete="off" required>
         <div id="autocompleteList" class="autocomplete-dropdown"></div>
       </div>
 
@@ -412,7 +412,7 @@
             <input type="radio" name="estado" id="radioGreen" value="Verde" checked>
             <div class="status-btn">
               <span class="dot"></span>
-              Conforme 
+              Conforme (Verde)
             </div>
           </label>
 
@@ -420,7 +420,7 @@
             <input type="radio" name="estado" id="radioYellow" value="Amarillo">
             <div class="status-btn">
               <span class="dot"></span>
-              Irregular 
+              Irregular (Amarillo)
             </div>
           </label>
         </div>
@@ -618,9 +618,11 @@
         const responseText = await response.text();
         const result = JSON.parse(responseText);
 
-        if (result.status === "success" && result.verified) {
+        if (result.status === "success") {
           guardadoExitoso = true;
           mensajeRespuesta = result.message;
+        } else {
+          mensajeRespuesta = result.message || "No se pudo guardar el registro.";
         }
       } catch (postErr) {
         console.warn("POST no disponible, intentando canal GET alternativo...", postErr);
@@ -645,11 +647,11 @@
           const getRes = await fetch(`${API_URL}?${getParams.toString()}`);
           const getResult = await getRes.json();
 
-          if (getResult.status === "success" && getResult.verified) {
+          if (getResult.status === "success") {
             guardadoExitoso = true;
             mensajeRespuesta = getResult.message;
           } else {
-            mensajeRespuesta = getResult.message || "No se pudo verificar la escritura en la hoja.";
+            mensajeRespuesta = getResult.message || "No se pudo escribir en la hoja.";
           }
         } catch (getErr) {
           console.error("Error definitivo en ambos canales:", getErr);
