@@ -58,6 +58,7 @@
       align-items: center;
       justify-content: center;
       overflow: hidden;
+      flex-shrink: 0;
     }
 
     .brand-logo img {
@@ -353,7 +354,7 @@
 
       <!-- Cantidad de Paquetes/Unidades -->
       <div class="form-group">
-        <label for="cantidad" id="lblCantidad">Cantidad Liberada</label>
+        <label for="cantidad" id="lblCantidad">Cantidad Liberada (PAQ)</label>
         <div class="input-wrapper">
           <input type="number" id="cantidad" min="1" placeholder="Ej. 150" required>
           <span class="unit-badge" id="unitBadge">PAQ</span>
@@ -413,7 +414,6 @@
   </main>
 
   <script>
-    // URL desplegada de tu Google Apps Script
     const API_URL = "https://script.google.com/macros/s/AKfycbxaBCnr_r8wP-2U2pE2aiNJNjnP6qrdwgPgqnSPp5ILs55WWDyRUcxgij6MJAGnIccxgA/exec";
 
     let productosData = [];
@@ -429,10 +429,22 @@
       const inputProducto = document.getElementById("producto");
       
       const updateUnit = () => {
-        const selectedValue = inputProducto.value.trim();
-        const prod = productosData.find(p => `${p.codigo} - ${p.nombre}` === selectedValue || p.codigo === selectedValue);
+        const query = inputProducto.value.trim().toLowerCase();
+        if (!query) {
+          document.getElementById("unitBadge").textContent = "PAQ";
+          document.getElementById("lblCantidad").textContent = "Cantidad Liberada (PAQ)";
+          return;
+        }
+
+        // Búsqueda inteligente e insensible a mayúsculas/minúsculas
+        const prod = productosData.find(p => {
+          const cod = String(p.codigo || '').trim().toLowerCase();
+          const nom = String(p.nombre || '').trim().toLowerCase();
+          const full = (cod && nom) ? `${cod} - ${nom}` : (cod || nom);
+          return query === full || query === cod || query === nom;
+        });
         
-        const um = prod ? prod.um : 'PAQ';
+        const um = (prod && prod.um) ? String(prod.um).trim().toUpperCase() : 'PAQ';
         document.getElementById("unitBadge").textContent = um;
         document.getElementById("lblCantidad").textContent = `Cantidad Liberada (${um})`;
       };
@@ -467,18 +479,24 @@
           datalist.innerHTML = "";
           
           productosData.forEach(prod => {
+            const cod = String(prod.codigo || '').trim();
+            const nom = String(prod.nombre || '').trim();
+            if (!cod && !nom) return;
+
             const option = document.createElement("option");
-            const fullText = `${prod.codigo} - ${prod.nombre}`;
+            const fullText = (cod && nom) ? `${cod} - ${nom}` : (cod || nom);
             option.value = fullText;
             datalist.appendChild(option);
           });
+          console.log("Catálogo de productos cargado correctamente:", productosData.length, "productos.");
+        } else {
+          console.warn("La API no devolvió una lista válida:", data);
         }
       } catch (err) {
-        console.error("Error cargando productos:", err);
+        console.error("Error al cargar productos desde Apps Script:", err);
       }
     }
 
-    // Envío del registro
     document.getElementById("releaseForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       
@@ -494,13 +512,13 @@
 
       const payload = {
         fecha: document.getElementById("fecha").value,
-        inspector: document.getElementById("inspector").value,
-        producto: document.getElementById("producto").value,
-        cantidad: document.getElementById("cantidad").value,
+        inspector: document.getElementById("inspector").value.trim(),
+        producto: document.getElementById("producto").value.trim(),
+        cantidad: Number(document.getElementById("cantidad").value),
         um: document.getElementById("unitBadge").textContent,
         estado: document.querySelector('input[name="estado"]:checked').value,
         parametrosNoConformes: parametrosSeleccionados,
-        observaciones: document.getElementById("observaciones").value
+        observaciones: document.getElementById("observaciones").value.trim()
       };
 
       btn.disabled = true;
@@ -531,6 +549,7 @@
         document.getElementById("lblCantidad").textContent = "Cantidad Liberada (PAQ)";
 
       } catch (err) {
+        console.error("Error al enviar registro:", err);
         statusMsg.className = "error";
         statusMsg.textContent = "Error al conectar con el servidor.";
       } finally {
