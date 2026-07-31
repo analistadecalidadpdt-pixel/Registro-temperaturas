@@ -366,12 +366,12 @@
 
       <div class="form-group">
         <label for="lote">Número / Código de Lote</label>
-        <input type="text" id="lote" placeholder="Ej. L-20240801" required>
+        <input type="text" id="lote" placeholder="Ej. 01" required>
       </div>
 
       <div class="form-group autocomplete-wrapper">
         <label for="producto">Escribe o busca el Producto (Código / Nombre)</label>
-        <input type="text" id="producto" placeholder="Escribe para buscar... ej: PTEM0001" autocomplete="off" required>
+        <input type="text" id="producto" placeholder="Escribe para buscar... Ej: PTEM0001" autocomplete="off" required>
         <div id="autocompleteList" class="autocomplete-dropdown"></div>
       </div>
 
@@ -390,7 +390,7 @@
             <input type="radio" name="estado" id="radioGreen" value="Verde" checked>
             <div class="status-btn">
               <span class="dot"></span>
-              Conforme (Verde)
+              Conforme 
             </div>
           </label>
 
@@ -398,7 +398,7 @@
             <input type="radio" name="estado" id="radioYellow" value="Amarillo">
             <div class="status-btn">
               <span class="dot"></span>
-              Irregular (Amarillo)
+              Irregular 
             </div>
           </label>
         </div>
@@ -437,9 +437,24 @@
     let productosData = [];
     let isSubmitting = false;
 
+    function hideStatusMessage() {
+      const statusMsg = document.getElementById("statusMessage");
+      if (statusMsg && statusMsg.style.display !== "none") {
+        statusMsg.style.display = "none";
+        statusMsg.className = "";
+      }
+    }
+
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("fecha").value = new Date().toISOString().split('T')[0];
       fetchProductos();
+
+      // Ocultar mensaje de estado tan pronto como el usuario empiece a llenar el nuevo registro
+      const formEl = document.getElementById("releaseForm");
+      if (formEl) {
+        formEl.addEventListener("input", hideStatusMessage);
+        formEl.addEventListener("change", hideStatusMessage);
+      }
 
       const inputProducto = document.getElementById("producto");
       const autocompleteList = document.getElementById("autocompleteList");
@@ -638,6 +653,11 @@
         document.getElementById("inspector").value = inspectorActual;
 
         statusMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+        // Ocultar el mensaje automáticamente después de 5 segundos
+        setTimeout(() => {
+          hideStatusMessage();
+        }, 5000);
       }
 
       function showError(msg) {
