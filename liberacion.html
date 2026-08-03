@@ -361,17 +361,17 @@
 
       <div class="form-group">
         <label for="inspector">Nombre del Responsable</label>
-        <input type="text" id="inspector" placeholder="Ej. Luis Perez" required>
+        <input type="text" id="inspector" placeholder="Ej. Paola Gonzalez" required>
       </div>
 
       <div class="form-group">
         <label for="lote">Número / Código de Lote</label>
-        <input type="text" id="lote" placeholder="Ej. 01" required>
+        <input type="text" id="lote" placeholder="Ej. L-20240801" required>
       </div>
 
       <div class="form-group autocomplete-wrapper">
         <label for="producto">Escribe o busca el Producto (Código / Nombre)</label>
-        <input type="text" id="producto" placeholder="Escribe para buscar... Ej: PTEM0001" autocomplete="off" required>
+        <input type="text" id="producto" placeholder="Escribe para buscar... ej: PTEM0001" autocomplete="off" required>
         <div id="autocompleteList" class="autocomplete-dropdown"></div>
       </div>
 
@@ -384,13 +384,21 @@
       </div>
 
       <div class="form-group">
+        <label for="cuarentena">Cantidad en Cuarentena (Opcional)</label>
+        <div class="input-wrapper">
+          <input type="number" id="cuarentena" min="0" placeholder="Ej. 0">
+          <span class="unit-badge" id="unitBadgeCuarentena">PAQ</span>
+        </div>
+      </div>
+
+      <div class="form-group">
         <label>Estado de Liberación</label>
         <div class="status-group">
           <label class="status-option green">
             <input type="radio" name="estado" id="radioGreen" value="Verde" checked>
             <div class="status-btn">
               <span class="dot"></span>
-              Conforme 
+              Conforme (Verde)
             </div>
           </label>
 
@@ -398,7 +406,7 @@
             <input type="radio" name="estado" id="radioYellow" value="Amarillo">
             <div class="status-btn">
               <span class="dot"></span>
-              Irregular 
+              Irregular (Amarillo)
             </div>
           </label>
         </div>
@@ -437,6 +445,15 @@
     let productosData = [];
     let isSubmitting = false;
 
+    // Helper para normalizar texto (ignora acentos, tildes y mayúsculas)
+    function normalizeStr(str) {
+      return String(str || '')
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+    }
+
     function hideStatusMessage() {
       const statusMsg = document.getElementById("statusMessage");
       if (statusMsg && statusMsg.style.display !== "none") {
@@ -460,43 +477,52 @@
       const autocompleteList = document.getElementById("autocompleteList");
       
       const updateUnit = () => {
-        const query = inputProducto.value.trim().toLowerCase();
-        if (!query) {
-          document.getElementById("unitBadge").textContent = "PAQ";
-          document.getElementById("lblCantidad").textContent = "Cantidad Liberada (PAQ)";
-          return;
+        const query = normalizeStr(inputProducto.value);
+        let um = 'PAQ';
+        if (query) {
+          const prod = productosData.find(p => {
+            const cod = normalizeStr(p.codigo);
+            const nom = normalizeStr(p.nombre);
+            const full = (cod && nom) ? `${cod} - ${nom}` : (cod || nom);
+            return query === full || query === cod || query === nom;
+          });
+          if (prod && prod.um) um = String(prod.um).trim().toUpperCase();
         }
-
-        const prod = productosData.find(p => {
-          const cod = String(p.codigo || '').trim().toLowerCase();
-          const nom = String(p.nombre || '').trim().toLowerCase();
-          const full = (cod && nom) ? `${cod} - ${nom}` : (cod || nom);
-          return query === full || query === cod || query === nom;
-        });
-        
-        const um = (prod && prod.um) ? String(prod.um).trim().toUpperCase() : 'PAQ';
         document.getElementById("unitBadge").textContent = um;
+        document.getElementById("unitBadgeCuarentena").textContent = um;
         document.getElementById("lblCantidad").textContent = `Cantidad Liberada (${um})`;
       };
 
       function renderAutocomplete(filterQuery = '') {
-        const query = filterQuery.trim().toLowerCase();
+        const query = normalizeStr(filterQuery);
         autocompleteList.innerHTML = '';
 
         if (!productosData || productosData.length === 0) {
-          autocompleteList.classList.remove('active');
+          const loadingItem = document.createElement('div');
+          loadingItem.className = 'autocomplete-item';
+          loadingItem.style.color = '#9ca3af';
+          loadingItem.style.cursor = 'default';
+          loadingItem.textContent = 'Cargando catálogo de productos...';
+          autocompleteList.appendChild(loadingItem);
+          autocompleteList.classList.add('active');
           return;
         }
 
         const filtered = productosData.filter(p => {
-          const cod = String(p.codigo || '').trim().toLowerCase();
-          const nom = String(p.nombre || '').trim().toLowerCase();
+          const cod = normalizeStr(p.codigo);
+          const nom = normalizeStr(p.nombre);
           const full = (cod && nom) ? `${cod} - ${nom}` : (cod || nom);
           return !query || full.includes(query) || cod.includes(query) || nom.includes(query);
         });
 
         if (filtered.length === 0) {
-          autocompleteList.classList.remove('active');
+          const noResultsItem = document.createElement('div');
+          noResultsItem.className = 'autocomplete-item';
+          noResultsItem.style.color = '#9ca3af';
+          noResultsItem.style.cursor = 'default';
+          noResultsItem.textContent = 'No se encontraron coincidencias';
+          autocompleteList.appendChild(noResultsItem);
+          autocompleteList.classList.add('active');
           return;
         }
 
@@ -509,11 +535,16 @@
           item.className = 'autocomplete-item';
           item.textContent = fullText;
           
-          item.addEventListener('click', () => {
+          // Usar pointerdown/mousedown para evitar cierres prematuros en pantallas táctiles y PC
+          const handleSelect = (e) => {
+            e.preventDefault();
             inputProducto.value = fullText;
             autocompleteList.classList.remove('active');
             updateUnit();
-          });
+          };
+
+          item.addEventListener('pointerdown', handleSelect);
+          item.addEventListener('click', handleSelect);
           
           autocompleteList.appendChild(item);
         });
@@ -530,7 +561,11 @@
         renderAutocomplete(inputProducto.value);
       });
 
-      document.addEventListener('click', (e) => {
+      inputProducto.addEventListener('click', () => {
+        renderAutocomplete(inputProducto.value);
+      });
+
+      document.addEventListener('pointerdown', (e) => {
         if (!e.target.closest('.autocomplete-wrapper')) {
           autocompleteList.classList.remove('active');
         }
@@ -557,6 +592,17 @@
         const data = await res.json();
         if (data.status === "success" && Array.isArray(data.productos)) {
           productosData = data.productos;
+          
+          // Si el usuario ya está haciendo clic o escribiendo en el campo, re-renderizar al instante
+          const inputProducto = document.getElementById("producto");
+          const autocompleteList = document.getElementById("autocompleteList");
+          if (autocompleteList.classList.contains("active") || document.activeElement === inputProducto) {
+            const query = inputProducto ? inputProducto.value : '';
+            const filtered = productosData;
+            if (inputProducto) {
+              inputProducto.dispatchEvent(new Event('input'));
+            }
+          }
         }
       } catch (err) {
         console.error("Error al cargar productos:", err);
@@ -584,16 +630,16 @@
         lote: document.getElementById("lote").value.trim(),
         producto: document.getElementById("producto").value.trim(),
         cantidad: Number(document.getElementById("cantidad").value),
+        cuarentena: Number(document.getElementById("cuarentena").value) || 0,
         um: document.getElementById("unitBadge").textContent,
         estado: document.querySelector('input[name="estado"]:checked').value,
-        parametrosNoConformes: parametrosSeleccionados,
+        parametrosNoConformes: parametrosTexto,
         observaciones: document.getElementById("observaciones").value.trim()
       };
 
       isSubmitting = true;
       btn.disabled = true;
       btn.textContent = "Guardando...";
-      statusMsg.className = "";
       statusMsg.style.display = "none";
 
       try {
@@ -604,9 +650,10 @@
           lote: payload.lote,
           producto: payload.producto,
           cantidad: payload.cantidad,
+          cuarentena: payload.cuarentena,
           um: payload.um,
           estado: payload.estado,
-          parametrosNoConformes: JSON.stringify(payload.parametrosNoConformes),
+          parametrosNoConformes: payload.parametrosNoConformes,
           observaciones: payload.observaciones
         });
 
@@ -635,17 +682,17 @@
         
         // Retener Fecha e Inspector
         const fechaActual = document.getElementById("fecha").value;
-        const inspectorActual = document.getElementById("inspector").value;
-        
-        // Limpiar campos de producto, lote, cantidad, observaciones
+        // Limpiar campos de producto, lote, cantidad, cuarentena, observaciones
         document.getElementById("lote").value = "";
         document.getElementById("producto").value = "";
         document.getElementById("cantidad").value = "";
+        document.getElementById("cuarentena").value = "";
         document.getElementById("observaciones").value = "";
         document.getElementById("radioGreen").checked = true;
         document.getElementById("parametersContainer").classList.remove("active");
         document.querySelectorAll('input[name="parametro"]').forEach(cb => cb.checked = false);
         document.getElementById("unitBadge").textContent = "PAQ";
+        document.getElementById("unitBadgeCuarentena").textContent = "PAQ";
         document.getElementById("lblCantidad").textContent = "Cantidad Liberada (PAQ)";
 
         // Restaurar Fecha e Inspector
