@@ -440,12 +440,13 @@
   </main>
 
   <script>
+    // IMPORTANTE: Reemplaza esta constante con la URL de tu implementación pública de Google Apps Script
     const API_URL = "https://script.google.com/macros/s/AKfycbxaBCnr_r8wP-2U2pE2aiNJNjnP6qrdwgPgqnSPp5ILs55WWDyRUcxgij6MJAGnIccxgA/exec";
 
     let productosData = [];
     let isSubmitting = false;
+    let dismissTimer = null;
 
-    // Helper para normalizar texto (ignora acentos, tildes y mayúsculas)
     function normalizeStr(str) {
       return String(str || '')
         .toLowerCase()
@@ -460,13 +461,16 @@
         statusMsg.style.display = "none";
         statusMsg.className = "";
       }
+      if (dismissTimer) {
+        clearTimeout(dismissTimer);
+        dismissTimer = null;
+      }
     }
 
     document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("fecha").value = new Date().toISOString().split('T')[0];
       fetchProductos();
 
-      // Ocultar mensaje de estado tan pronto como el usuario empiece a llenar el nuevo registro
       const formEl = document.getElementById("releaseForm");
       if (formEl) {
         formEl.addEventListener("input", hideStatusMessage);
@@ -535,7 +539,6 @@
           item.className = 'autocomplete-item';
           item.textContent = fullText;
           
-          // Usar pointerdown/mousedown para evitar cierres prematuros en pantallas táctiles y PC
           const handleSelect = (e) => {
             e.preventDefault();
             inputProducto.value = fullText;
@@ -587,25 +590,32 @@
     });
 
     async function fetchProductos() {
+      // 1. Cargar instantáneamente de la memoria del navegador (localStorage)
+      const cachedLocal = localStorage.getItem("pdt_cat_productos");
+      if (cachedLocal) {
+        try {
+          productosData = JSON.parse(cachedLocal);
+        } catch(e) {}
+      }
+
+      // 2. Traer en segundo plano la lista actualizada desde Google Apps Script
       try {
         const res = await fetch(API_URL);
         const data = await res.json();
         if (data.status === "success" && Array.isArray(data.productos)) {
           productosData = data.productos;
+          localStorage.setItem("pdt_cat_productos", JSON.stringify(productosData));
           
-          // Si el usuario ya está haciendo clic o escribiendo en el campo, re-renderizar al instante
           const inputProducto = document.getElementById("producto");
           const autocompleteList = document.getElementById("autocompleteList");
           if (autocompleteList.classList.contains("active") || document.activeElement === inputProducto) {
-            const query = inputProducto ? inputProducto.value : '';
-            const filtered = productosData;
             if (inputProducto) {
               inputProducto.dispatchEvent(new Event('input'));
             }
           }
         }
       } catch (err) {
-        console.error("Error al cargar productos:", err);
+        console.error("Error al sincronizar productos:", err);
       }
     }
 
@@ -623,6 +633,10 @@
           parametrosSeleccionados.push(cb.value);
         });
       }
+
+      const parametrosTexto = parametrosSeleccionados.length > 0 
+        ? parametrosSeleccionados.join(", ") 
+        : "N/A";
 
       const payload = {
         fecha: document.getElementById("fecha").value,
@@ -680,9 +694,9 @@
         statusMsg.textContent = `✔ ${msg}`;
         statusMsg.style.display = "block";
         
-        // Retener Fecha e Inspector
         const fechaActual = document.getElementById("fecha").value;
-        // Limpiar campos de producto, lote, cantidad, cuarentena, observaciones
+        const inspectorActual = document.getElementById("inspector").value;
+
         document.getElementById("lote").value = "";
         document.getElementById("producto").value = "";
         document.getElementById("cantidad").value = "";
@@ -695,14 +709,13 @@
         document.getElementById("unitBadgeCuarentena").textContent = "PAQ";
         document.getElementById("lblCantidad").textContent = "Cantidad Liberada (PAQ)";
 
-        // Restaurar Fecha e Inspector
         document.getElementById("fecha").value = fechaActual;
         document.getElementById("inspector").value = inspectorActual;
 
-        statusMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        document.getElementById("lote").focus();
 
-        // Ocultar el mensaje automáticamente después de 5 segundos
-        setTimeout(() => {
+        if (dismissTimer) clearTimeout(dismissTimer);
+        dismissTimer = setTimeout(() => {
           hideStatusMessage();
         }, 5000);
       }
@@ -711,7 +724,6 @@
         statusMsg.className = "error";
         statusMsg.textContent = `✖ ${msg}`;
         statusMsg.style.display = "block";
-        statusMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
       }
     });
   </script>
